@@ -2,6 +2,7 @@ env/
 
 archive (2).zip/
 shape_predictor_68_face_landmarks.dat/
+new_dataset/
 
 face_images/
 preprocessed_2D/
