@@ -18,7 +18,7 @@ for face in faces:
         cv2.circle(image, (x, y), 1, (0, 255, 0), -1)
         resized_image = cv2.resize(image, (412, 312))  
         normalize_image = resized_image / 255.0
-
+    
 output_folder = "preprocessed_2D"
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)

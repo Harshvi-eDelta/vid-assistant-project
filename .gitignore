@@ -9,3 +9,7 @@ landmarks/
 new_dataset/
 face_images/
 landmarks.csv
+face_images/
+depth_estimation.py
+landmarks.csv
+landmark_model.pth
