@@ -11,34 +11,51 @@ from tqdm import tqdm
 from landmark_cnn import LandmarkCNN
 
 # Dataset Class
+# Dataset Class
 class LandmarkDataset(Dataset):
-    def __init__(self, csv_file, img_dir, transform=None):
-        self.landmarks_frame = pd.read_csv(csv_file)
+    def __init__(self, img_dir, pth_dir, transform=None):
         self.img_dir = img_dir
+        self.pth_dir = pth_dir
         self.transform = transform
 
+        # Collect all image files
+        self.image_files = sorted([f for f in os.listdir(img_dir) if f.endswith(('.jpg', '.png'))])
+
     def __len__(self):
-        return len(self.landmarks_frame)
+        return len(self.image_files)
 
     def __getitem__(self, idx):
-        img_name = os.path.join(self.img_dir, self.landmarks_frame.iloc[idx, 0])
-        image = cv2.imread(img_name)
+        img_name = self.image_files[idx]
+        img_path = os.path.join(self.img_dir, img_name)
+
+        # Load image
+        image = cv2.imread(img_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         orig_h, orig_w = image.shape[:2]
 
-        # Load landmarks
-        landmarks = self.landmarks_frame.iloc[idx, 1:].values.astype("float32").reshape(-1, 2)
+        # Load corresponding .pth file
+        pth_name = os.path.splitext(img_name)[0] + ".pth"  # Match image name
+        pth_path = os.path.join(self.pth_dir, pth_name)
 
-        # Normalize landmarks
-        #landmarks[:, 0] /= orig_w
-        #landmarks[:, 1] /= orig_h
+        if not os.path.exists(pth_path):
+            raise FileNotFoundError(f"Landmark file not found for image: {img_name}")
 
+        # Load landmarks from .pth file
+        landmarks = torch.load(pth_path,weights_only=False)
+        #landmarks = landmarks.numpy().astype("float32").reshape(-1, 2)
+        landmarks = landmarks.astype("float32").reshape(-1, 2)
+
+        # Normalize landmarks (convert to range [0,1])
+        landmarks[:, 0] /= orig_w
+        landmarks[:, 1] /= orig_h
+
+        # Apply transformations
         if self.transform:
             image = self.transform(image)
 
         return image, torch.tensor(landmarks.flatten(), dtype=torch.float32)
 
-# Data Transformation
+# Data Transformations
 transform = transforms.Compose([
     transforms.ToPILImage(),
     transforms.Resize((224, 224)),
@@ -47,9 +64,12 @@ transform = transforms.Compose([
 ])
 
 # Load dataset
-dataset = LandmarkDataset(csv_file="/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/landmarks_normalized.csv", 
-                          img_dir="/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg", 
-                          transform=transform)
+# Load dataset
+dataset = LandmarkDataset(
+    img_dir="/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg",
+    pth_dir="/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7_fixed",  # Updated to use pth_dir
+    transform=transform
+)
 
 train_loader = DataLoader(dataset, batch_size=16, shuffle=True)
 
@@ -58,12 +78,11 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Model
 model = LandmarkCNN().to(device)
-#criterion = nn.MSELoss()
 criterion = nn.SmoothL1Loss() 
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5, verbose=True)
 
-# Training Loop with Progress Bar
+# Training Loop
 best_loss = float("inf")
 patience = 5  
 counter = 0  
@@ -85,11 +104,13 @@ for epoch in range(num_epochs):
             break
 
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)  # Prevent exploding gradients
         optimizer.step()
+
         running_loss += loss.item()
         progress_bar.set_postfix(loss=loss.item())
 
-        avg_loss = running_loss / len(train_loader)
+    avg_loss = running_loss / len(train_loader)
     print(f"Epoch [{epoch+1}/{num_epochs}], Avg Loss: {avg_loss:.4f}")
 
     scheduler.step(avg_loss)  
@@ -103,11 +124,8 @@ for epoch in range(num_epochs):
         counter += 1
         if counter >= patience:
             print("Early stopping triggered!")
-            break  # Stop training
+            break  
 
-    print(f"Epoch [{epoch+1}/{num_epochs}], Avg Loss: {running_loss/len(train_loader):.4f}")
-    scheduler.step(running_loss / len(train_loader))  # Use avg loss
-
-# Save Model
+# Save Final Model
 torch.save(model.state_dict(), "landmark_model.pth")
 print("Model saved successfully!")

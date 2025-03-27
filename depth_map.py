@@ -54,7 +54,7 @@ import os
 import cv2
 import torch
 import numpy as np
-
+import timm
 # Set device (use GPU if available)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -70,7 +70,7 @@ transform = midas_transforms.dpt_transform if "DPT" in model_type else midas_tra
 
 # Input and output folders
 input_folder = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg"  
-output_folder = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/depth_maps"
+output_folder = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/depth_maps_1"
 os.makedirs(output_folder, exist_ok=True)
 
 for filename in os.listdir(input_folder):

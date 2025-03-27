@@ -2,7 +2,7 @@ env/
 
 archive (2).zip
 LS3D-W-balanced-20-03-2017.zip
-shape_predictor_68_face_landmarks.dat/
+shape_predictor_68_face_landmarks.dat
 new_dataset/
 
 landmarks/
@@ -13,3 +13,6 @@ face_images/
 landmarks.csv
 landmark_normalized.csv
 landmark_model.pth
+requirements.txt
+best_landmark_model.pth
+restore.py
