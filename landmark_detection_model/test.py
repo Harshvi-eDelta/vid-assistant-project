@@ -47,7 +47,7 @@ def predict_landmarks(image_path):
     for (x, y) in landmarks:
         x, y = int(x), int(y)
         if 0 <= x < w and 0 <= y < h:  # Ensure landmarks are inside image
-            cv2.circle(orig_image, (x, y), 2, (0, 255, 0), -1)  
+            cv2.circle(orig_image, (x, y), 1, (0, 255, 0), -1)  
 
     #  Debugging: Print landmark coordinates
     print("Predicted landmarks:", landmarks)
@@ -58,7 +58,7 @@ def predict_landmarks(image_path):
     plt.axis("off")
     plt.show()
 
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg3.png"
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg9.jpg"
 predict_landmarks(image_path)
 
 

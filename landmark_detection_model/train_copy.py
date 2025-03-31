@@ -9,6 +9,8 @@ import cv2
 from torchvision import transforms
 from tqdm import tqdm
 from landmark_cnn import LandmarkCNN
+from PIL import Image
+import matplotlib.pyplot as plt
 
 # Dataset Class
 class LandmarkDataset(Dataset):
@@ -16,8 +18,6 @@ class LandmarkDataset(Dataset):
         self.img_dir = img_dir
         self.pth_dir = pth_dir
         self.transform = transform
-
-        # Collect all image files
         self.image_files = sorted([f for f in os.listdir(img_dir) if f.endswith(('.jpg', '.png'))])
 
     def __len__(self):
@@ -27,37 +27,46 @@ class LandmarkDataset(Dataset):
         img_name = self.image_files[idx]
         img_path = os.path.join(self.img_dir, img_name)
 
-        # Load image
+        # Load image (OpenCV loads as NumPy array)
         image = cv2.imread(img_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        orig_h, orig_w = image.shape[:2]
 
-        # Load corresponding .pth file
-        pth_name = os.path.splitext(img_name)[0] + ".pth"  # Match image name
+        # ✅ Convert OpenCV image (NumPy) to PIL format (Fix for TypeError)
+        image = Image.fromarray(image)
+
+        orig_h, orig_w = image.size
+
+        # Load landmarks
+        pth_name = os.path.splitext(img_name)[0] + ".pth"
         pth_path = os.path.join(self.pth_dir, pth_name)
-
         if not os.path.exists(pth_path):
             raise FileNotFoundError(f"Landmark file not found for image: {img_name}")
 
-        # Load landmarks from .pth file
-        landmarks = torch.load(pth_path,weights_only=False)
-        
-        landmarks = landmarks.astype("float32").reshape(-1, 2)
+        landmarks = torch.load(pth_path, weights_only=False).astype("float32").reshape(-1, 2)
 
         # Normalize landmarks (convert to range [0,1])
         landmarks[:, 0] /= orig_w
         landmarks[:, 1] /= orig_h
 
-        # Apply transformations
+        # Apply transforms (PIL image is required)
         if self.transform:
             image = self.transform(image)
 
         return image, torch.tensor(landmarks.flatten(), dtype=torch.float32)
 
 # Data Transformations
-transform = transforms.Compose([
+'''transform = transforms.Compose([
     transforms.ToPILImage(),
     transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+])'''
+
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.RandomRotation(10),
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+    transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])
@@ -71,7 +80,6 @@ dataset = LandmarkDataset(
 
 train_loader = DataLoader(dataset, batch_size=16, shuffle=True)
 
-# Device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Model
