@@ -1,4 +1,4 @@
-import torch
+'''import torch
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,14 +6,13 @@ from landmark_cnn import LandmarkCNN  # Import your trained model
 from torchvision import transforms
 from PIL import Image 
 
-
 transform = transforms.Compose([
-    transforms.Resize((224, 224)),  # No need for ToPILImage()
+    transforms.Resize((224, 224)),  
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])
 
-model_path = "/Users/edelta076/Desktop/Project_VID_Assistant/landmark_model.pth" 
+model_path = "/Users/edelta076/Desktop/Project_VID_Assistant/best_landmark_model.pth" 
 model = LandmarkCNN()
 model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
 model.eval()
@@ -40,14 +39,17 @@ def predict_landmarks(image_path):
     landmarks[:, 0] *= 224  # Convert back to 224x224 coordinates
     landmarks[:, 1] *= 224  
 
-    landmarks[:, 0] = (landmarks[:, 0] / 224) * w  # Scale back to original width
-    landmarks[:, 1] = (landmarks[:, 1] / 224) * h  # Scale back to original height
+    #landmarks[:, 0] = (landmarks[:, 0] / 224) * w  # Scale back to original width
+    #landmarks[:, 1] = (landmarks[:, 1] / 224) * h  # Scale back to original height
+    landmarks[:, 0] = ((landmarks[:, 0] / 224) * w) - 6
+    landmarks[:, 1] = ((landmarks[:, 1] / 224) * h) - 12  # Small vertical shift correction
+
 
     # Draw landmarks on image
     for (x, y) in landmarks:
         x, y = int(x), int(y)
         if 0 <= x < w and 0 <= y < h:  # Ensure landmarks are inside image
-            cv2.circle(orig_image, (x, y), 2, (0, 255, 0), -1)  
+            cv2.circle(orig_image, (x, y), 1, (0, 255, 0), -1)  
 
     #  Debugging: Print landmark coordinates
     print("Predicted landmarks:", landmarks)
@@ -58,7 +60,123 @@ def predict_landmarks(image_path):
     plt.axis("off")
     plt.show()
 
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg3.png"
-predict_landmarks(image_path)
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg7.jpg"
+predict_landmarks(image_path)'''
 
+import torch
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from landmark_cnn import LandmarkCNN  # Import your trained model
+from torchvision import transforms
+from PIL import Image 
+
+transform = transforms.Compose([
+    transforms.Resize((224, 224),interpolation=Image.BILINEAR),  
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+])
+
+model_path = "/Users/edelta076/Desktop/Project_VID_Assistant/best_landmark_model.pth" 
+model = LandmarkCNN()
+model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
+model.eval()
+
+# Function to detect and visualize landmarks
+'''def predict_landmarks(image_path):
+    image = cv2.imread(image_path)
+    if image is None:
+        raise FileNotFoundError(f"Image not found: {image_path}")
+
+    orig_image = image.copy()
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    h, w, _ = orig_image.shape  # Original image dimensions
+
+    # Convert OpenCV image to PIL Image
+    image_pil = Image.fromarray(image)  
+    image_resized = transform(image_pil).unsqueeze(0)  # Apply transforms
+    #image_resized = image_resized.to(torch.float32)  # Ensure correct dtype
+    #image_resized = transforms.functional.resize(image, (224, 224), interpolation=transforms.InterpolationMode.BILINEAR).unsqueeze(0)
+
+    with torch.no_grad():
+        output = model(image_resized)  # Get landmark predictions
+    landmarks = output.cpu().numpy().reshape(-1, 2)
+
+    landmarks[:, 0] *= w  # Convert back to 224x224 coordinates
+    landmarks[:, 1] *= h  
+
+    print(f"Original image size: {w}x{h}")
+    print(f"Predicted landmarks (normalized): {output.cpu().numpy().reshape(-1, 2)}")
+    print(f"Denormalized landmarks (before scaling to original size): {landmarks * 224}")
+    print(f"Final scaled landmarks (original image size): {landmarks}")
+
+    #landmarks[:, 0] = (landmarks[:, 0] / 224) * w  # Scale back to original width
+    #landmarks[:, 1] = (landmarks[:, 1] / 224) * h  # Scale back to original height
+    #landmarks[:, 0] = ((landmarks[:, 0] / 224) * w) - 2
+    #landmarks[:, 1] = ((landmarks[:, 1] / 224) * h) - 2  # Small vertical shift correction
+
+
+    # Draw landmarks on image
+    for (x, y) in landmarks:
+        x, y = int(round(x)), int(round(y))
+        if 0 <= x < w and 0 <= y < h:  # Ensure landmarks are inside image
+            cv2.circle(orig_image, (x, y), 1, (0, 255, 0), -1)  
+
+    #  Debugging: Print landmark coordinates
+    print("Predicted landmarks:", landmarks)
+
+    #  Display the image with landmarks
+    plt.figure(figsize=(5, 5))
+    plt.imshow(cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB))
+    plt.axis("off")
+    plt.show()'''
+
+def predict_landmarks(image_path):
+        image = cv2.imread(image_path)
+        if image is None:
+            raise FileNotFoundError(f"Image not found: {image_path}")
+
+        orig_image = image.copy()
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        h, w, _ = orig_image.shape  # Get original image dimensions
+
+        # Convert OpenCV image to PIL Image
+        image_pil = Image.fromarray(image)  
+        image_resized = transform(image_pil).unsqueeze(0)  # Apply transforms
+
+        with torch.no_grad():
+            output = model(image_resized)  # Get landmark predictions
+        landmarks = output.cpu().numpy().reshape(-1, 2)  # Normalized landmarks (0 to 1)
+
+        # 🔹 Debugging Print Statements
+        print("\n🔍 DEBUG INFO:")
+        print(f"Image Path: {image_path}")
+        print(f"Original Image Size: {w}x{h}")
+        print(f"Predicted Landmarks (normalized 0-1):\n{landmarks}")
+
+        # Convert to original image size
+        landmarks[:, 0] *= w  # Scale x-coordinates
+        landmarks[:, 1] *= h  # Scale y-coordinates
+
+        print(f"Final Scaled Landmarks (original size):\n{landmarks}")
+
+        # Draw landmarks
+        for (x, y) in landmarks:
+            x, y = int(round(x)), int(round(y))
+            if 0 <= x < w and 0 <= y < h:  # Ensure landmarks are inside image
+                cv2.circle(orig_image, (x, y), 2, (0, 255, 0), -1)  
+
+        '''for idx, (x, y) in enumerate(landmarks):
+            cv2.putText(orig_image, str(idx), (int(x), int(y)), 
+                cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 1)'''
+
+
+        # Display the image with landmarks
+        plt.figure(figsize=(5, 5))
+        plt.imshow(cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB))
+        plt.axis("off")
+        plt.show()
+
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg9.jpg"
+predict_landmarks(image_path)
 

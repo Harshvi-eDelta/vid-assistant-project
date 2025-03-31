@@ -6,7 +6,7 @@ base_folder = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset"
 
 # Define paths for input folders
 input_folders = {
-    "images": os.path.join(base_folder, "original_jpg"),        
+    "images": os.path.join(base_folder, "original_jpg_copy"),        
     "depth_maps": os.path.join(base_folder, "depth_maps_1"),      
     "meshes": os.path.join(base_folder, "generated_meshes1"),    
     "uv_meshes": os.path.join(base_folder, "uv_generated_meshes"), 

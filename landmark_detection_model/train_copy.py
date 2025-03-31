@@ -11,7 +11,6 @@ from tqdm import tqdm
 from landmark_cnn import LandmarkCNN
 
 # Dataset Class
-# Dataset Class
 class LandmarkDataset(Dataset):
     def __init__(self, img_dir, pth_dir, transform=None):
         self.img_dir = img_dir
@@ -42,7 +41,7 @@ class LandmarkDataset(Dataset):
 
         # Load landmarks from .pth file
         landmarks = torch.load(pth_path,weights_only=False)
-        #landmarks = landmarks.numpy().astype("float32").reshape(-1, 2)
+        
         landmarks = landmarks.astype("float32").reshape(-1, 2)
 
         # Normalize landmarks (convert to range [0,1])
@@ -64,9 +63,8 @@ transform = transforms.Compose([
 ])
 
 # Load dataset
-# Load dataset
 dataset = LandmarkDataset(
-    img_dir="/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg",
+    img_dir="/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg_copy",
     pth_dir="/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7_fixed",  # Updated to use pth_dir
     transform=transform
 )

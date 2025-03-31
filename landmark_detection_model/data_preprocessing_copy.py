@@ -30,24 +30,33 @@ class LandmarkDataset(Dataset):
         orig_h, orig_w = image.shape[:2]
 
         # Load corresponding .t7 file
-        t7_name = os.path.splitext(img_name)[0] + ".t7"  # Match image name
+        t7_name = os.path.splitext(img_name)[0] + ".t7"
         t7_path = os.path.join(self.t7_dir, t7_name)
 
         if not os.path.exists(t7_path):
             raise FileNotFoundError(f"Landmark file not found for image: {img_name}")
 
-        landmarks = torch.load(t7_path)  # Load landmarks from .t7 file
-        landmarks = landmarks.numpy().astype("float32").reshape(-1, 2)
+        # Load landmarks
+        landmarks = torch.load(t7_path)
+        if isinstance(landmarks, torch.Tensor):
+            landmarks = landmarks.numpy()  # Convert Tensor to NumPy if needed
+        elif not isinstance(landmarks, np.ndarray):
+            raise ValueError(f"Unexpected data format in {t7_path}, expected NumPy array or Tensor.")
+
+        landmarks = landmarks.astype("float32").reshape(-1, 2)
 
         # Normalize landmarks
         landmarks[:, 0] /= orig_w
         landmarks[:, 1] /= orig_h
+
+        print(f" Image: {img_name}, Landmarks: {landmarks[:5]}")  # Print first 5 landmarks for debugging
 
         # Apply transformations
         if self.transform:
             image = self.transform(image)
 
         return image, torch.tensor(landmarks.flatten(), dtype=torch.float32)
+
 
 # Define transformations
 transform = transforms.Compose([
@@ -59,7 +68,7 @@ transform = transforms.Compose([
 
 # Load dataset
 dataset = LandmarkDataset(
-    img_dir="/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg",
+    img_dir="/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg_copy",
     t7_dir="/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7",
     transform=transform
 )
