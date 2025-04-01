@@ -46,7 +46,7 @@ class LandmarkCNN(nn.Module):
     def __init__(self):
         super(LandmarkCNN, self).__init__()
 
-        # 🔹 Add STN module
+        #  Add STN module
         self.stn = STN()
 
         # Convolutional layers
@@ -73,7 +73,7 @@ class LandmarkCNN(nn.Module):
         self.dropout = nn.Dropout(0.5)
 
     def forward(self, x):
-        # 🔹 Apply STN before convolution layers
+        #  Apply STN before convolution layers
         x = self.stn(x)
 
         x = self.pool(F.relu(self.conv1(x)))
@@ -98,3 +98,4 @@ class LandmarkCNN(nn.Module):
         x = self.fc2(x)  # Output layer
         x = torch.sigmoid(x)  # Normalize output between 0 and 1
         return x
+

@@ -59,7 +59,7 @@ def test_landmarks(image_path, pth_path):
     for i, (x, y) in enumerate(pred_landmarks):
         x, y = int(x), int(y)
         if 0 <= x < w and 0 <= y < h:
-            cv2.circle(orig_image, (x, y), 2, (0, 255, 0), -1)  # Green dots
+            cv2.circle(orig_image, (x, y), 1, (0, 255, 0), -1)  # Green dots
             #cv2.putText(orig_image, str(i), (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (0, 255, 0), 1)
 
     # Draw ground truth landmarks (Red)
@@ -76,7 +76,7 @@ def test_landmarks(image_path, pth_path):
     plt.show()
 
 # Run test
-test_image = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg8.jpg"
+test_image = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg9.jpg"
 test_pth = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7_fixed/6.pth"
  # Change this
 test_landmarks(test_image, test_pth)

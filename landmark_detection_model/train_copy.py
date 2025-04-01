@@ -13,6 +13,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 # Dataset Class
+
 class LandmarkDataset(Dataset):
     def __init__(self, img_dir, pth_dir, transform=None):
         self.img_dir = img_dir
@@ -31,10 +32,10 @@ class LandmarkDataset(Dataset):
         image = cv2.imread(img_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        # ✅ Convert OpenCV image (NumPy) to PIL format (Fix for TypeError)
+        # Convert OpenCV image (NumPy) to PIL format (Fix for TypeError)
         image = Image.fromarray(image)
 
-        orig_h, orig_w = image.size
+        orig_w, orig_h = image.size
 
         # Load landmarks
         pth_name = os.path.splitext(img_name)[0] + ".pth"
@@ -42,7 +43,8 @@ class LandmarkDataset(Dataset):
         if not os.path.exists(pth_path):
             raise FileNotFoundError(f"Landmark file not found for image: {img_name}")
 
-        landmarks = torch.load(pth_path, weights_only=False).astype("float32").reshape(-1, 2)
+        # landmarks = torch.load(pth_path, weights_only=False).astype("float32").reshape(-1, 2)
+        landmarks = torch.load(pth_path).astype("float32").reshape(-1, 2)
 
         # Normalize landmarks (convert to range [0,1])
         landmarks[:, 0] /= orig_w
@@ -55,21 +57,20 @@ class LandmarkDataset(Dataset):
         return image, torch.tensor(landmarks.flatten(), dtype=torch.float32)
 
 # Data Transformations
-'''transform = transforms.Compose([
-    transforms.ToPILImage(),
-    transforms.Resize((224, 224)),
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),  # Works with PIL
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-])'''
+])
 
-transform = transforms.Compose([
+'''transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.RandomRotation(10),
     transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-])
+])'''
 
 # Load dataset
 dataset = LandmarkDataset(
@@ -90,7 +91,8 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0
 
 # Training Loop
 best_loss = float("inf")
-patience = 5  
+# patience = 5  
+patience = 7  
 counter = 0  
 
 num_epochs = 15

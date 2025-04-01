@@ -60,7 +60,7 @@ def predict_landmarks(image_path):
     plt.axis("off")
     plt.show()
 
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg7.jpg"
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg2.jpg"
 predict_landmarks(image_path)'''
 
 '''import torch
@@ -157,12 +157,12 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])
 
-print("Transform",transform)
+#print("Transform",transform)
 
 # Paths
 model_path = "/Users/edelta076/Desktop/Project_VID_Assistant/best_landmark_model.pth" 
 test_pth = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7_fixed/6.pth"
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg9.jpg"
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg2.jpg"
 #image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/landmark_images/13.jpg"
 
 # Load Model
@@ -206,6 +206,19 @@ def predict_landmarks(image_path, gt_landmarks):
     landmarks[:, 1] *= h  
     landmarks = np.round(landmarks).astype(int)
 
+    # Debugging: Print Landmark Scaling Info
+    print(f"GT Landmarks (Raw):\n{gt_landmarks}")
+    print(f"Predicted Landmarks (Raw):\n{landmarks}")
+
+    # Ensure GT landmarks are in pixel coordinates
+    if gt_landmarks.max() <= 1.0:  # They are still normalized
+        gt_landmarks[:, 0] *= w
+        gt_landmarks[:, 1] *= h
+        print("GT landmarks were normalized. Converted to pixel coordinates.")
+
+    print(f"GT Landmarks (After Scaling):\n{gt_landmarks}")
+    print(f"Predicted Landmarks (After Scaling):\n{landmarks}")
+
     # Compute offset per landmark
     offsets = gt_landmarks - landmarks  
     # average_offset = np.mean(landmarks - offsets, axis=0)
@@ -242,10 +255,10 @@ def predict_landmarks(image_path, gt_landmarks):
     print("Original Predicted Landmarks:\n", landmarks)
     print("Computed Offsets:\n", offsets)
     print("Average Offset:\n", average_offset)
-    print("Corrected Landmarks:\n", corrected_landmarks)'''
+    print("Corrected Landmarks:\n", corrected_landmarks)
 
     print("Raw Model Output:\n", landmarks)
-    print("Ground Truth Landmarks:\n", gt_landmarks)
+    print("Ground Truth Landmarks:\n", gt_landmarks)'''
 
     # Show Image
     plt.figure(figsize=(5, 5))

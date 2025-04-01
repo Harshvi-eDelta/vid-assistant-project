@@ -16,3 +16,4 @@ landmark_model.pth
 requirements.txt
 best_landmark_model.pth
 restore.py
+new_project/AFLW2000/
