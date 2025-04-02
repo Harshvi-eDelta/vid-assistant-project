@@ -241,7 +241,6 @@ def predict_landmarks(image_path, gt_landmarks):
     print(f"MAE Before Correction: {mae_before}")
     print(f"MAE After Correction: {mae_after}")
 
-
     # Draw Predicted Landmarks
     for (x, y) in landmarks:
         if 0 <= x < w and 0 <= y < h:

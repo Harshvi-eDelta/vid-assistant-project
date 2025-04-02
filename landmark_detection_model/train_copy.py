@@ -13,7 +13,6 @@ from PIL import Image
 import matplotlib.pyplot as plt
 
 # Dataset Class
-
 class LandmarkDataset(Dataset):
     def __init__(self, img_dir, pth_dir, transform=None):
         self.img_dir = img_dir
