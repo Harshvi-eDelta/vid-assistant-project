@@ -18,4 +18,11 @@ best_landmark_model.pth
 restore.py
 new_project/AFLW2000/
 best_landmark_model_2.pth
+best_landmark_cnn_w.pth
+landmark_cnn_w.pth
 landmark_model_2.pth
+300W-3D 2/
+300W-3D-Face/
+
+point_cloud.ply
+cleaned_point_cloud.ply

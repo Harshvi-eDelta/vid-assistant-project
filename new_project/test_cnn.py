@@ -19,7 +19,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])
 
-def visualize_landmarks(image, landmarks):
+def visualize_landmarks(image, landmarks, orig_w, orig_h):
     """Plot predicted landmarks on the image."""
     image = image.permute(1, 2, 0).numpy()  # Convert (3, 224, 224) → (224, 224, 3)
     image = (image * 0.5) + 0.5  # Denormalize image
@@ -28,14 +28,11 @@ def visualize_landmarks(image, landmarks):
     # Reshape landmarks from (42,) → (21,2)
     landmarks = landmarks.reshape(-1, 2)
 
-    # Convert normalized landmarks to pixel coordinates
-    h, w, _ = image.shape
-    # landmarks[:, 0] *= w  
-    # landmarks[:, 1] *= h  
+    # Convert normalized landmarks to pixel coordinates (original image size)
+    landmarks[:, 0] *= orig_w  
+    landmarks[:, 1] *= orig_h  
 
-    landmarks[:, 0] = landmarks[:, 0] * orig_w  
-    landmarks[:, 1] = landmarks[:, 1] * orig_h  
-    print("Predicted Landmarks:", landmarks)
+    print("Predicted Landmarks (Scaled to Original Image):", landmarks)
 
     # Plot image & landmarks
     plt.imshow(image)
@@ -43,7 +40,7 @@ def visualize_landmarks(image, landmarks):
     plt.show()
 
 # Load Test Image
-test_image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg2.jpg"  # Change to your test image path
+test_image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg10.jpg"  # Change to your test image path
 image = Image.open(test_image_path).convert("RGB")
 orig_w, orig_h = image.size
 
@@ -56,4 +53,4 @@ with torch.no_grad():
     pred_landmarks = pred_landmarks.cpu().numpy().flatten()  # Convert to numpy
 
 # Visualize Result
-visualize_landmarks(image_tensor.squeeze(0), pred_landmarks)
+visualize_landmarks(image_tensor.squeeze(0), pred_landmarks,orig_w,orig_h)

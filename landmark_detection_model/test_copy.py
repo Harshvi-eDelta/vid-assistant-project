@@ -162,7 +162,7 @@ transform = transforms.Compose([
 # Paths
 model_path = "/Users/edelta076/Desktop/Project_VID_Assistant/best_landmark_model.pth" 
 test_pth = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7_fixed/6.pth"
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg2.jpg"
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/image00520.jpg"
 #image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/landmark_images/13.jpg"
 
 # Load Model
@@ -260,7 +260,7 @@ def predict_landmarks(image_path, gt_landmarks):
     print("Ground Truth Landmarks:\n", gt_landmarks)'''
 
     # Show Image
-    plt.figure(figsize=(5, 5))
+    plt.figure(figsize=(4, 4))
     plt.imshow(cv2.cvtColor(orig_image, cv2.COLOR_BGR2RGB))
     plt.axis("off")
     # plt.savefig("image")

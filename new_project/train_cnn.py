@@ -96,10 +96,12 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = LandmarkCNN().to(device)
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5, verbose=True)
-criterion = nn.SmoothL1Loss()
+#criterion = nn.SmoothL1Loss()
+criterion = nn.MSELoss()
+
 
 # Step 5: Training Loop
-num_epochs = 15
+num_epochs = 25
 best_loss = float("inf")
 patience = 5
 counter = 0
