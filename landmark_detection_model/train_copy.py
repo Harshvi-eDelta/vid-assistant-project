@@ -57,7 +57,7 @@ class LandmarkDataset(Dataset):
 
 # Data Transformations
 transform = transforms.Compose([
-    transforms.Resize((224, 224)),  # Works with PIL
+    transforms.Resize((256, 256)),  # Works with PIL
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])

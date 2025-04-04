@@ -7,7 +7,7 @@ from tqdm import tqdm  # ✅ Progress bar
 
 # Hyperparameters
 num_epochs = 20
-batch_size = 16
+batch_size = 64
 learning_rate = 1e-4
 data_path = "/Users/edelta076/Desktop/Project_VID_Assistant/300W-3D 2/HELEN"
 
@@ -26,7 +26,7 @@ if __name__ == '__main__':
         model.train()
         total_loss = 0.0
 
-        # ✅ Add tqdm progress bar
+        # Add tqdm progress bar
         progress_bar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}", leave=True)
 
         for images, landmarks in progress_bar:
@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
             total_loss += loss.item()
 
-            # ✅ Update tqdm with current loss
+            #  Update tqdm with current loss
             progress_bar.set_postfix(loss=loss.item())
 
         print(f"Epoch {epoch+1}/{num_epochs}, Loss: {total_loss/len(train_loader)}")

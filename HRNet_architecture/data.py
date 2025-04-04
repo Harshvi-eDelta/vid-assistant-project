@@ -7,6 +7,11 @@ import scipy.io as sio
 import glob
 import torch.nn.functional as F
 
+def generate_gaussian_heatmap(x, y, heatmap_size=64, sigma=1.5):
+            xx, yy = np.meshgrid(np.arange(heatmap_size), np.arange(heatmap_size))
+            heatmap = np.exp(-((xx - x)**2 + (yy - y)**2) / (2 * sigma**2))
+            return heatmap
+
 class FacialLandmarkDataset(Dataset):
     def __init__(self, data_dir, img_size=256, heatmap_size=64, num_landmarks=68, transform=None):
         self.data_dir = data_dir
@@ -32,6 +37,7 @@ class FacialLandmarkDataset(Dataset):
         img = cv2.imread(img_path)
         img = cv2.resize(img, (self.img_size, self.img_size))
         img = img.astype(np.float32) / 255.0  # Normalize
+        img = (img - 0.5) / 0.5
 
         # Load landmarks from .mat file
         mat_data = sio.loadmat(mat_path)
@@ -39,12 +45,13 @@ class FacialLandmarkDataset(Dataset):
         landmarks = landmarks * (self.heatmap_size / self.img_size)  # Scale to heatmap size
         landmarks = landmarks.T  # Convert (2, 68) → (68, 2)
 
-        # Convert landmarks to heatmap
+            # Convert landmarks to heatmap
         heatmaps = np.zeros((self.num_landmarks, self.heatmap_size, self.heatmap_size), dtype=np.float32)
+
         for i, (x, y) in enumerate(landmarks):
-            x, y = int(x), int(y)
             if 0 <= x < self.heatmap_size and 0 <= y < self.heatmap_size:
-                heatmaps[i, y, x] = 1.0  # Place landmark point
+                heatmaps[i] = generate_gaussian_heatmap(x, y, self.heatmap_size)
+
         heatmaps = torch.tensor(heatmaps, dtype=torch.float32)
 
         if self.transform:

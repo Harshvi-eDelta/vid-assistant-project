@@ -10,7 +10,13 @@ class HRNet_LandmarkDetector(nn.Module):
         self.final_layer = nn.Conv2d(2048, num_landmarks, kernel_size=1)  # Output heatmaps
 
     def forward(self, x):
-        x = self.hrnet(x)['out']
+        #x = self.hrnet(x)['out']
+        features = self.hrnet(x)
+        if isinstance(features, dict):
+            x = features['out']  # if exists
+        else:
+            x = features
+
         x = self.final_layer(x)
         x = F.interpolate(x, size=(64, 64), mode='bilinear', align_corners=False)  # Upsample to 64x64
         return x
