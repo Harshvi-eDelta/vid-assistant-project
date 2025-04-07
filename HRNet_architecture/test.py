@@ -20,7 +20,6 @@ def load_image(image_path, img_size=256):
     img = torch.tensor(img.transpose(2, 0, 1), dtype=torch.float32).unsqueeze(0).to(device)
     return img
 
-
 # Convert Heatmaps to Coordinates
 def heatmap_to_landmarks(heatmaps, image_size=256, heatmap_size=64):
     """

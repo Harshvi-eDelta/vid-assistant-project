@@ -40,7 +40,7 @@ def visualize_landmarks(image, landmarks, orig_w, orig_h):
     plt.show()
 
 # Load Test Image
-test_image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg10.jpg"  # Change to your test image path
+test_image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg12.jpg"  # Change to your test image path
 image = Image.open(test_image_path).convert("RGB")
 orig_w, orig_h = image.size
 

@@ -54,4 +54,4 @@ def predict_landmarks(img_path):
 
 
 # Test on a new image
-predict_landmarks("/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg9.jpg")
+predict_landmarks("/Users/edelta076/Desktop/Project_VID_Assistant/face_images/image00520.jpg")

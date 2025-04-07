@@ -8,7 +8,8 @@ from torch.utils.data import Dataset, DataLoader
 import cv2
 from torchvision import transforms
 from tqdm import tqdm
-from landmark_cnn import LandmarkCNN
+#from landmark_cnn import LandmarkCNN
+from landmark_cnn_copy import DeepLandmarkCNN
 from PIL import Image
 import matplotlib.pyplot as plt
 
@@ -46,8 +47,8 @@ class LandmarkDataset(Dataset):
         landmarks = torch.load(pth_path).astype("float32").reshape(-1, 2)
 
         # Normalize landmarks (convert to range [0,1])
-        landmarks[:, 0] /= orig_w
-        landmarks[:, 1] /= orig_h
+        landmarks[:, 0] /= 224
+        landmarks[:, 1] /= 224
 
         # Apply transforms (PIL image is required)
         if self.transform:
@@ -57,7 +58,7 @@ class LandmarkDataset(Dataset):
 
 # Data Transformations
 transform = transforms.Compose([
-    transforms.Resize((256, 256)),  # Works with PIL
+    transforms.Resize((224, 224)),  # Works with PIL
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])
@@ -83,7 +84,8 @@ train_loader = DataLoader(dataset, batch_size=16, shuffle=True)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Model
-model = LandmarkCNN().to(device)
+# model = LandmarkCNN().to(device)
+model = DeepLandmarkCNN().to(device)
 criterion = nn.SmoothL1Loss() 
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5, verbose=True)
@@ -94,13 +96,14 @@ best_loss = float("inf")
 patience = 7  
 counter = 0  
 
-num_epochs = 15
+num_epochs = 30
 for epoch in range(num_epochs):
     model.train()
     running_loss = 0.0
     progress_bar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}")
 
     for images, landmarks in progress_bar:
+        #print("Image size:", images.shape)  # 👈 ADD THIS LINE
         images, landmarks = images.to(device), landmarks.to(device)
         optimizer.zero_grad()
         outputs = model(images)
@@ -126,7 +129,7 @@ for epoch in range(num_epochs):
     if avg_loss < best_loss:
         best_loss = avg_loss
         counter = 0  
-        torch.save(model.state_dict(), "best_landmark_model.pth")  # Save best model
+        torch.save(model.state_dict(), "best_deep_landmark_model.pth")  # Save best model
     else:
         counter += 1
         if counter >= patience:
@@ -134,5 +137,5 @@ for epoch in range(num_epochs):
             break  
 
 # Save Final Model
-torch.save(model.state_dict(), "landmark_model.pth")
+torch.save(model.state_dict(), "deep_landmark_model.pth")
 print("Model saved successfully!")

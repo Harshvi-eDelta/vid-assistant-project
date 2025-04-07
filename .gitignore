@@ -19,10 +19,15 @@ restore.py
 new_project/AFLW2000/
 best_landmark_model_2.pth
 best_landmark_cnn_w.pth
+best_deep_landmark_model.pth
+deep_landmark_model.pth
 landmark_cnn_w.pth
 landmark_model_2.pth
+hrnet_landmarks.pth
 300W-3D 2/
 300W-3D-Face/
-
+corrected_landmarks.txt
 point_cloud.ply
 cleaned_point_cloud.ply
+
+output_mesh.obj

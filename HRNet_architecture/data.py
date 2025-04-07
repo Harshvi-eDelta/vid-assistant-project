@@ -44,7 +44,7 @@ class FacialLandmarkDataset(Dataset):
         landmarks = mat_data['pt2d']  # Shape: (68, 2)
         landmarks = landmarks * (self.heatmap_size / self.img_size)  # Scale to heatmap size
         landmarks = landmarks.T  # Convert (2, 68) → (68, 2)
-
+        
             # Convert landmarks to heatmap
         heatmaps = np.zeros((self.num_landmarks, self.heatmap_size, self.heatmap_size), dtype=np.float32)
 
