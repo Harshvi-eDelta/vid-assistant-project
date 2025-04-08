@@ -8,8 +8,8 @@ from torch.utils.data import Dataset, DataLoader
 import cv2
 from torchvision import transforms
 from tqdm import tqdm
-#from landmark_cnn import LandmarkCNN
-from landmark_cnn_copy import DeepLandmarkCNN
+from landmark_cnn_copy import LandmarkCNN
+#from landmark_cnn_copy import DeepLandmarkCNN
 from PIL import Image
 import matplotlib.pyplot as plt
 
@@ -85,9 +85,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Model
 # model = LandmarkCNN().to(device)
-model = DeepLandmarkCNN().to(device)
+model = LandmarkCNN().to(device)
 criterion = nn.SmoothL1Loss() 
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.0001)
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=5, verbose=True)
 
 # Training Loop
@@ -96,17 +96,20 @@ best_loss = float("inf")
 patience = 7  
 counter = 0  
 
-num_epochs = 30
+num_epochs = 50
 for epoch in range(num_epochs):
     model.train()
     running_loss = 0.0
     progress_bar = tqdm(train_loader, desc=f"Epoch {epoch+1}/{num_epochs}")
 
     for images, landmarks in progress_bar:
+        # print("GT min:", landmarks.min().item(), "GT max:", landmarks.max().item())
+        # break  # Only need to check one batch       
         #print("Image size:", images.shape)  # 👈 ADD THIS LINE
         images, landmarks = images.to(device), landmarks.to(device)
         optimizer.zero_grad()
         outputs = model(images)
+        #print("Model output:", outputs[0])
         loss = criterion(outputs, landmarks)
 
         if torch.isnan(loss) or torch.isinf(loss):
@@ -129,7 +132,7 @@ for epoch in range(num_epochs):
     if avg_loss < best_loss:
         best_loss = avg_loss
         counter = 0  
-        torch.save(model.state_dict(), "best_deep_landmark_model.pth")  # Save best model
+        torch.save(model.state_dict(), "best_landmark_model_2.pth")  # Save best model
     else:
         counter += 1
         if counter >= patience:
@@ -137,5 +140,5 @@ for epoch in range(num_epochs):
             break  
 
 # Save Final Model
-torch.save(model.state_dict(), "deep_landmark_model.pth")
+torch.save(model.state_dict(), "landmark_model_2.pth")
 print("Model saved successfully!")

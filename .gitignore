@@ -29,5 +29,8 @@ hrnet_landmarks.pth
 corrected_landmarks.txt
 point_cloud.ply
 cleaned_point_cloud.ply
+checkpoints/
+
+check_landmark_label.py
 
 output_mesh.obj

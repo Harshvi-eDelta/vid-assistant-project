@@ -1,4 +1,4 @@
-'''import torch
+import torch
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,7 +12,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])
 
-model_path = "/Users/edelta076/Desktop/Project_VID_Assistant/best_landmark_model.pth" 
+model_path = "/Users/edelta076/Desktop/Project_VID_Assistant/best_landmark_model_2.pth" 
 model = LandmarkCNN()
 model.load_state_dict(torch.load(model_path, map_location=torch.device("cpu")))
 model.eval()
@@ -60,11 +60,11 @@ def predict_landmarks(image_path):
     plt.axis("off")
     plt.show()
 
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg15.jpg"
-predict_landmarks(image_path)'''
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg12.jpg"
+predict_landmarks(image_path)
 
 
-import torch
+'''import torch
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -74,7 +74,7 @@ from PIL import Image
 
 # Paths
 model_path = "/Users/edelta076/Desktop/Project_VID_Assistant/best_deep_landmark_model.pth"
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg10.jpg"
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg11.jpg"
 
 # Define image transform
 transform = transforms.Compose([
@@ -125,7 +125,7 @@ def predict_landmarks_only(image_path):
     plt.show()
 
 # Run prediction
-predict_landmarks_only(image_path)
+predict_landmarks_only(image_path)'''
 
 
 

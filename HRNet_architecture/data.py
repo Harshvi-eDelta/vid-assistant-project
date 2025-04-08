@@ -42,15 +42,19 @@ class FacialLandmarkDataset(Dataset):
         # Load landmarks from .mat file
         mat_data = sio.loadmat(mat_path)
         landmarks = mat_data['pt2d']  # Shape: (68, 2)
-        landmarks = landmarks * (self.heatmap_size / self.img_size)  # Scale to heatmap size
         landmarks = landmarks.T  # Convert (2, 68) → (68, 2)
+        #landmarks = landmarks * (self.heatmap_size / self.img_size)  # Scale to heatmap size
         
             # Convert landmarks to heatmap
         heatmaps = np.zeros((self.num_landmarks, self.heatmap_size, self.heatmap_size), dtype=np.float32)
 
         for i, (x, y) in enumerate(landmarks):
+            # ⚠️ Scale here (from 256 → 64)
+            x = x * (self.heatmap_size / self.img_size)
+            y = y * (self.heatmap_size / self.img_size)
+
             if 0 <= x < self.heatmap_size and 0 <= y < self.heatmap_size:
-                heatmaps[i] = generate_gaussian_heatmap(x, y, self.heatmap_size)
+                heatmaps[i] = generate_gaussian_heatmap(x, y, self.heatmap_size, sigma=2.5)
 
         heatmaps = torch.tensor(heatmaps, dtype=torch.float32)
 

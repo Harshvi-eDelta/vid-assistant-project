@@ -1,4 +1,4 @@
-'''import torch
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -33,9 +33,22 @@ class STN(nn.Module):
         self.fc_loc[2].weight.data.zero_()
         self.fc_loc[2].bias.data.copy_(torch.tensor([1, 0, 0, 0, 1, 0], dtype=torch.float))
 
+    # def forward(self, x):
+    #     xs = self.localization(x)
+    #     xs = xs.view(-1, 10 * 53 * 53)
+    #     theta = self.fc_loc(xs)
+    #     theta = theta.view(-1, 2, 3)
+    #     grid = F.affine_grid(theta, x.size(), align_corners=False)
+    #     x = F.grid_sample(x, grid, align_corners=False)
+    #     return x
+
     def forward(self, x):
         xs = self.localization(x)
-        xs = xs.view(-1, 10 * 53 * 53)
+        b, c, h, w = xs.shape
+        xs = xs.view(b, -1)
+        if self.fc_loc[0].in_features != c * h * w:
+            # Re-initialize with correct shape
+            self.fc_loc[0] = nn.Linear(c * h * w, 32).to(x.device)
         theta = self.fc_loc(xs)
         theta = theta.view(-1, 2, 3)
         grid = F.affine_grid(theta, x.size(), align_corners=False)
@@ -65,7 +78,7 @@ class LandmarkCNN(nn.Module):
         self.dropout = nn.Dropout(0.5)
 
     def forward(self, x):
-        x = self.stn(x)
+        #x = self.stn(x)
 
         x = self.pool(F.relu(self.bn1(self.conv1(x))))
         x = self.pool(F.relu(self.bn2(self.conv2(x))))
@@ -73,14 +86,14 @@ class LandmarkCNN(nn.Module):
         x = self.pool(F.relu(self.bn4(self.conv4(x))))
 
         x = self.se_block(x)
-        print("Before flatten:", x.shape) # 👈 ADD THIS LINE
+        #print("Before flatten:", x.shape) # 👈 ADD THIS LINE
         x = x.view(x.size(0), -1)
         x = F.relu(self.fc1(x))
         x = self.dropout(x)
         x = torch.sigmoid(self.fc2(x))
-        return x'''
+        return x
 
-import torch
+'''import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -137,5 +150,5 @@ class DeepLandmarkCNN(nn.Module):
         x = self.layer4(x)
         x = self.layer5(x)
         x = self.fc(x)
-        return x
+        return x'''
 
