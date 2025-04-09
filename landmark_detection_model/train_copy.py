@@ -1,4 +1,4 @@
-import os
+'''import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -63,14 +63,14 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 ])
 
-'''transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.RandomRotation(10),
-    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-])'''
+# transform = transforms.Compose([
+#     transforms.Resize((224, 224)),
+#     transforms.RandomRotation(10),
+#     transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+#     transforms.RandomHorizontalFlip(),
+#     transforms.ToTensor(),
+#     transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+# ])
 
 # Load dataset
 dataset = LandmarkDataset(
@@ -141,4 +141,59 @@ for epoch in range(num_epochs):
 
 # Save Final Model
 torch.save(model.state_dict(), "landmark_model_2.pth")
-print("Model saved successfully!")
+print("Model saved successfully!")'''
+
+
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+from data_preprocessing_copy import LandmarkDataset, get_transforms
+from landmark_cnn_copy import LandmarkCNN
+from tqdm import tqdm
+import os
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Paths
+img_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg_copy"
+t7_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7"
+save_path = "best_model.pth"
+
+# Dataset and Loader
+dataset = LandmarkDataset(img_dir, t7_dir, transform=get_transforms())
+train_loader = DataLoader(dataset, batch_size=16, shuffle=True)
+
+# Model, Loss, Optimizer
+model = LandmarkCNN().to(device)
+criterion = nn.MSELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+best_loss = float("inf")
+
+epochs = 30
+
+for epoch in range(epochs):
+    model.train()
+    running_loss = 0.0
+
+    loop = tqdm(train_loader, desc=f"Epoch {epoch}")
+    for images, landmarks in loop:
+        images, landmarks = images.to(device), landmarks.to(device)
+
+        outputs = model(images)
+        loss = criterion(outputs, landmarks)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        running_loss += loss.item()
+        loop.set_postfix(loss=loss.item())
+
+    avg_loss = running_loss / len(train_loader)
+    print(f"Epoch {epoch+1}/{epochs}, Average Loss: {avg_loss:.6f}")
+
+    if avg_loss < best_loss:
+        best_loss = avg_loss
+        torch.save(model.state_dict(), save_path)
+        print("Best model saved.")

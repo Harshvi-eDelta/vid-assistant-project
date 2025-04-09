@@ -30,6 +30,7 @@ corrected_landmarks.txt
 point_cloud.ply
 cleaned_point_cloud.ply
 checkpoints/
+best_model.pth
 
 check_landmark_label.py
 
