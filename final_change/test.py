@@ -39,7 +39,7 @@ output[:, 0] *= w_original / 256.0
 output[:, 1] *= h_original / 256.0
 
 # === Visualize ===
-plt.figure(figsize=(6, 6))
+plt.figure(figsize=(4, 4))
 plt.imshow(img_rgb)
 plt.scatter(output[:, 0], output[:, 1], c='lime', s=15)
 plt.title("Predicted Landmarks")

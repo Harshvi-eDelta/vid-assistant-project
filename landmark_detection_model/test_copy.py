@@ -63,7 +63,8 @@ def predict_landmarks(image_path):
 image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg12.jpg"
 predict_landmarks(image_path)'''
 
-import torch
+# original
+'''import torch
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -80,7 +81,7 @@ model.to(device)
 model.eval()
 
 # Load custom image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg5.jpg"
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg2.jpg"
 original_img = cv2.imread(image_path)
 
 if original_img is None:
@@ -112,6 +113,62 @@ for (x, y) in output:
     cv2.circle(resized_img, (int(x), int(y)), 2, (0, 255, 0), -1)
 
 # Show image with landmarks
+plt.figure(figsize=(4,4))
+plt.imshow(resized_img)
+plt.title("Predicted Landmarks")
+plt.axis("off")
+plt.show()'''
+
+import torch
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image
+from landmark_cnn_copy import LandmarkCNN
+from data_preprocessing_copy import get_transforms
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Load model
+model = LandmarkCNN()
+model.load_state_dict(torch.load("best_model.pth", map_location=device))
+model.to(device)
+model.eval()
+
+# Load image
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/4.jpg"
+original_img = cv2.imread(image_path)
+if original_img is None:
+    raise FileNotFoundError(f"Image not found: {image_path}")
+
+# Convert to RGB
+original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
+
+# Resize for inference
+resized_img = cv2.resize(original_img, (256, 256))
+
+# Prepare for model input
+pil_img = Image.fromarray(original_img)
+transform = get_transforms()
+input_tensor = transform(pil_img).unsqueeze(0).to(device)
+
+# Inference
+with torch.no_grad():
+    output = model(input_tensor).cpu().numpy().reshape(-1, 2)
+
+# Denormalize
+output[:, 0] *= 256
+output[:, 1] *= 256
+
+shift_x = 4   # Tune this: try -5 to +5
+shift_y = 2   # Tune this: try -5 to +5
+output[:, 0] += shift_x
+output[:, 1] += shift_y
+
+# Draw
+for (x, y) in output:
+    cv2.circle(resized_img, (int(x), int(y)), 2, (0, 255, 0), -1)
+
 plt.imshow(resized_img)
 plt.title("Predicted Landmarks")
 plt.axis("off")

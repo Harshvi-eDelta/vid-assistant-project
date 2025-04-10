@@ -108,7 +108,7 @@ dataset = LandmarkDataset(
 
 train_loader = DataLoader(dataset, batch_size=16, shuffle=True)'''
 
-
+# original
 import os
 import torch
 import numpy as np
@@ -127,7 +127,7 @@ class LandmarkDataset(Dataset):
     def __len__(self):
         return len(self.image_files)
 
-    def __getitem__(self, idx):
+    '''def __getitem__(self, idx):
         img_name = self.image_files[idx]
         image_path = os.path.join(self.img_dir, img_name)
         t7_path = os.path.join(self.t7_dir, os.path.splitext(img_name)[0] + '.t7')
@@ -149,7 +149,39 @@ class LandmarkDataset(Dataset):
             image = self.transform(image)
 
         landmark = torch.tensor(landmark, dtype=torch.float32).view(-1)  # flatten to (136,)
+        return image, landmark'''
+
+    def __getitem__(self, idx):
+        img_name = self.image_files[idx]
+        image_path = os.path.join(self.img_dir, img_name)
+        t7_path = os.path.join(self.t7_dir, os.path.splitext(img_name)[0] + '.t7')
+
+        # Load image and landmark
+        image = Image.open(image_path).convert("RGB")
+        landmark = torchfile.load(t7_path)
+        landmark = np.array(landmark).astype(np.float32)
+
+        # Resize image and scale landmarks accordingly
+        resized_width, resized_height = 256, 256
+        original_width, original_height = image.size
+        scale_x = resized_width / original_width
+        scale_y = resized_height / original_height
+
+        # Scale landmarks to match resized image
+        landmark[:, 0] *= scale_x
+        landmark[:, 1] *= scale_y
+
+        # Transform image
+        if self.transform:
+            image = self.transform(image)
+
+        # Normalize landmarks to [0, 1]
+        landmark[:, 0] /= resized_width
+        landmark[:, 1] /= resized_height
+
+        landmark = torch.tensor(landmark, dtype=torch.float32).view(-1)
         return image, landmark
+
 
 def get_transforms():
     return transforms.Compose([
