@@ -81,7 +81,7 @@ model.to(device)
 model.eval()
 
 # Load custom image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg2.jpg"
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg12.jpg"
 original_img = cv2.imread(image_path)
 
 if original_img is None:
@@ -119,6 +119,7 @@ plt.title("Predicted Landmarks")
 plt.axis("off")
 plt.show()'''
 
+# trying new 
 import torch
 import cv2
 import numpy as np
@@ -135,6 +136,59 @@ model.load_state_dict(torch.load("best_model.pth", map_location=device))
 model.to(device)
 model.eval()
 
+# Load custom image
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg12.jpg"
+original_img = cv2.imread(image_path)
+
+if original_img is None:
+    raise FileNotFoundError(f"Image not found at path: {image_path}")
+
+# Convert BGR (OpenCV) to RGB
+original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
+
+# Resize for visualization later
+resized_img = cv2.resize(original_img, (256, 256))
+
+# Convert to PIL for transform
+pil_img = Image.fromarray(original_img)
+
+# Apply transform
+transform = get_transforms()
+input_tensor = transform(pil_img).unsqueeze(0).to(device)
+
+# Predict landmarks
+with torch.no_grad():
+    output = model(input_tensor).cpu().numpy().reshape(-1, 2)
+
+# Denormalize using the final display image size (256x256)
+output[:, 0] *= 256  # x
+output[:, 1] *= 256  # y
+
+# Draw landmarks
+for (x, y) in output:
+    cv2.circle(resized_img, (int(x), int(y)), 2, (0, 255, 0), -1)
+
+# Show image with landmarks
+plt.figure(figsize=(4,4))
+plt.imshow(resized_img)
+plt.title("Predicted Landmarks")
+plt.axis("off")
+plt.show()
+
+'''import torch
+import cv2
+import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+from landmark_cnn_copy import LandmarkCNN  # make sure this is the correct path
+from data_preprocessing_copy import get_transforms
+
+# Load model
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = LandmarkCNN().to(device)
+model.load_state_dict(torch.load("best_model.pth", map_location=device))
+model.eval()
+
 # Load image
 image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/4.jpg"
 original_img = cv2.imread(image_path)
@@ -143,12 +197,13 @@ if original_img is None:
 
 # Convert to RGB
 original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
+h, w = original_img.shape[:2]
 
-# Resize for inference
+# Resize image to 256x256
 resized_img = cv2.resize(original_img, (256, 256))
 
 # Prepare for model input
-pil_img = Image.fromarray(original_img)
+pil_img = Image.fromarray(resized_img)
 transform = get_transforms()
 input_tensor = transform(pil_img).unsqueeze(0).to(device)
 
@@ -156,23 +211,24 @@ input_tensor = transform(pil_img).unsqueeze(0).to(device)
 with torch.no_grad():
     output = model(input_tensor).cpu().numpy().reshape(-1, 2)
 
-# Denormalize
+# Output check
+print("Predicted normalized landmarks:", output)
+
+# Denormalize (to original image size)
 output[:, 0] *= 256
 output[:, 1] *= 256
 
-shift_x = 4   # Tune this: try -5 to +5
-shift_y = 2   # Tune this: try -5 to +5
-output[:, 0] += shift_x
-output[:, 1] += shift_y
-
-# Draw
+# Draw landmarks
 for (x, y) in output:
-    cv2.circle(resized_img, (int(x), int(y)), 2, (0, 255, 0), -1)
+    cv2.circle(original_img, (int(x), int(y)), 2, (0, 255, 0), -1)
 
-plt.imshow(resized_img)
+# Display
+plt.figure(figsize = (4,4))
+plt.imshow(original_img)
 plt.title("Predicted Landmarks")
 plt.axis("off")
-plt.show()
+plt.show()'''
+
 
 
 '''import torch
