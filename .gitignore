@@ -32,6 +32,7 @@ cleaned_point_cloud.ply
 checkpoints/
 best_model.pth
 model.txt
+best_heatmap_model.pth
 
 check_landmark_label.py
 

@@ -53,13 +53,39 @@ def get_transforms():
 # trying new 
 import os
 import torch
-import numpy as np
-import torchfile  # This is key for .t7 files
 from torch.utils.data import Dataset
+import numpy as np
 from PIL import Image
+import torchfile
 import torchvision.transforms as transforms
+import cv2
 
-class LandmarkDataset(Dataset):
+def get_transforms():
+    return transforms.Compose([
+        transforms.Resize((256, 256)),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5]*3, std=[0.5]*3),
+    ])
+
+def generate_heatmap(landmark, heatmap_size=64, image_size=256, sigma=2.5):
+    num_landmarks = landmark.shape[0]
+    heatmaps = np.zeros((num_landmarks, heatmap_size, heatmap_size), dtype=np.float32)
+
+    for i in range(num_landmarks):
+        x = int(landmark[i, 0] / image_size * heatmap_size)
+        y = int(landmark[i, 1] / image_size * heatmap_size)
+        if x < 0 or y < 0 or x >= heatmap_size or y >= heatmap_size:
+            continue
+        heatmap = np.zeros((heatmap_size, heatmap_size), dtype=np.float32)
+        heatmap[y, x] = 1
+        heatmap = cv2.GaussianBlur(heatmap, (0, 0), sigma)
+        heatmap = heatmap / heatmap.max()
+        heatmaps[i] = heatmap
+
+    return heatmaps
+
+class LandmarkHeatmapDataset(Dataset):
     def __init__(self, img_dir, t7_dir, transform=None):
         self.img_dir = img_dir
         self.t7_dir = t7_dir
@@ -74,33 +100,29 @@ class LandmarkDataset(Dataset):
         image_path = os.path.join(self.img_dir, img_name)
         t7_path = os.path.join(self.t7_dir, os.path.splitext(img_name)[0] + '.t7')
 
-        # Load image
+        # Load image and landmarks
         image = Image.open(image_path).convert("RGB")
-        original_width, original_height = image.size
+        landmark = torchfile.load(t7_path)
+        #landmark = np.array(landmark).astype(np.float32)
 
-        # Load .t7 landmark
-        landmark = torchfile.load(t7_path)  # (68, 2)
         landmark = np.array(landmark).astype(np.float32)
 
-        # Normalize landmarks by original image size
-        landmark[:, 0] /= original_width   # normalize x
-        landmark[:, 1] /= original_height  # normalize y
+        # Resize landmarks from original scale to 256x256 scale
+        original_width, original_height = 256, 256  # target image size
+        input_width, input_height = image.size      # original image size BEFORE transform
 
-        # Transform image
+        scale_x = original_width / input_width
+        scale_y = original_height / input_height
+
+        landmark[:, 0] *= scale_x
+        landmark[:, 1] *= scale_y
+
         if self.transform:
             image = self.transform(image)
 
-        landmark = torch.tensor(landmark, dtype=torch.float32).view(-1)  # flatten to (136,)
-        return image, landmark
+        # Generate heatmaps
+        heatmaps = generate_heatmap(landmark)
 
+        return image, torch.tensor(heatmaps, dtype=torch.float32)
 
-def get_transforms():
-    return transforms.Compose([
-        transforms.Resize((256, 256)),
-        transforms.RandomRotation(degrees=10),                  # Small rotation
-        transforms.RandomHorizontalFlip(),                      # Flip faces
-        transforms.ColorJitter(brightness=0.2, contrast=0.2),   # Vary lighting
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5]*3, std=[0.5]*3)
-    ])
 

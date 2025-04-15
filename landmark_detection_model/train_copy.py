@@ -57,10 +57,11 @@ for epoch in range(epochs):
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
-from data_preprocessing_copy import LandmarkDataset, get_transforms
-from landmark_cnn_copy import LandmarkCNN
+from data_preprocessing_copy import LandmarkHeatmapDataset, get_transforms
+from landmark_cnn_copy import HeatmapCNN
 from tqdm import tqdm
 import os
+import matplotlib.pyplot as plt
 
 # Device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -70,66 +71,65 @@ img_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_j
 t7_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7"
 save_path = "best_model.pth"
 
-# Load full dataset
-full_dataset = LandmarkDataset(img_dir, t7_dir, transform=get_transforms())
-
-# Split into train & validation
-val_ratio = 0.1
-val_size = int(val_ratio * len(full_dataset))
+full_dataset = LandmarkHeatmapDataset(img_dir, t7_dir, transform=get_transforms())
+val_size = int(0.1 * len(full_dataset))
 train_size = len(full_dataset) - val_size
 train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
 
 train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
+val_loader = DataLoader(val_dataset, batch_size=16)
 
-# Model, Loss, Optimizer
-model = LandmarkCNN().to(device)
-criterion = nn.SmoothL1Loss()
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+model = HeatmapCNN().to(device)
+criterion = nn.MSELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
 
-# Training loop
 best_val_loss = float("inf")
-epochs = 30
-
-for epoch in range(epochs):
+for epoch in range(30):
     model.train()
     train_loss = 0.0
-    loop = tqdm(train_loader, desc=f"Epoch [{epoch+1}/{epochs}] - Training")
-
-    for images, landmarks in loop:
-        images, landmarks = images.to(device), landmarks.to(device)
+    loop = tqdm(train_loader, desc=f"Epoch {epoch+1}")
+    for batch_idx, (images, heatmaps) in enumerate(loop):
+        images, heatmaps = images.to(device), heatmaps.to(device)
+        outputs = model(images)
+        loss = criterion(outputs, heatmaps)
 
         optimizer.zero_grad()
-        outputs = model(images)
-        loss = criterion(outputs, landmarks)
         loss.backward()
         optimizer.step()
 
         train_loss += loss.item()
-        loop.set_postfix(train_loss=loss.item())
+        loop.set_postfix(loss=loss.item())
 
-    avg_train_loss = train_loss / len(train_loader)
+        # 🔍 Debug: visualize 1 sample from first batch of first epoch
+        if epoch == 0 and batch_idx == 0:
+            import matplotlib.pyplot as plt
+            plt.imshow(heatmaps[0][0].cpu(), cmap='hot')  # Landmark 0 of first sample
+            plt.title("Heatmap for landmark 0")
+            plt.axis("off")
+            plt.show()
 
-    # Validation phase
+
+
+    avg_train = train_loss / len(train_loader)
+
+    # Validation
     model.eval()
     val_loss = 0.0
     with torch.no_grad():
-        for images, landmarks in val_loader:
-            images, landmarks = images.to(device), landmarks.to(device)
+        for images, heatmaps in val_loader:
+            images, heatmaps = images.to(device), heatmaps.to(device)
             outputs = model(images)
-            loss = criterion(outputs, landmarks)
+            loss = criterion(outputs, heatmaps)
             val_loss += loss.item()
+    avg_val = val_loss / len(val_loader)
 
-    avg_val_loss = val_loss / len(val_loader)
+    print(f"Epoch {epoch+1}: Train Loss={avg_train:.4f} | Val Loss={avg_val:.4f}")
+    if avg_val < best_val_loss:
+        best_val_loss = avg_val
+        torch.save(model.state_dict(), "best_heatmap_model.pth")
+        print("Saved Best Model")
 
-    print(f"\nEpoch {epoch+1}/{epochs} | Train Loss: {avg_train_loss:.6f} | Val Loss: {avg_val_loss:.6f}")
-
-    # Save best model
-    if avg_val_loss < best_val_loss:
-        best_val_loss = avg_val_loss
-        torch.save(model.state_dict(), save_path)
-        print("Best model saved.\n")
-
+    
 
 # using validation set
 '''import os
