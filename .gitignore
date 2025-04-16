@@ -33,6 +33,7 @@ checkpoints/
 best_model.pth
 model.txt
 best_heatmap_model.pth
+runs/
 
 check_landmark_label.py
 

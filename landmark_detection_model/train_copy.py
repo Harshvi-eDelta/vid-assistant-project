@@ -56,80 +56,103 @@ for epoch in range(epochs):
 # trying new 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, random_split
-from data_preprocessing_copy import LandmarkHeatmapDataset, get_transforms
-from landmark_cnn_copy import HeatmapCNN
+from torch.utils.data import DataLoader,random_split
 from tqdm import tqdm
 import os
-import matplotlib.pyplot as plt
+from landmark_cnn_copy import LandmarkCNN  # Your model with 2 outputs: heatmap1 and heatmap2
+from data_preprocessing_copy import LandmarkHeatmapDataset, get_transforms
+from torch.utils.tensorboard import SummaryWriter
 
-# Device
+# Setup
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("Using device:", device)
 
 # Paths
-img_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg_copy"
-t7_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7"
-save_path = "best_model.pth"
+train_img_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg_copy"
+train_t7_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7"
+save_path = 'best_model.pth'
 
-full_dataset = LandmarkHeatmapDataset(img_dir, t7_dir, transform=get_transforms())
-val_size = int(0.1 * len(full_dataset))
-train_size = len(full_dataset) - val_size
-train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+full_dataset = LandmarkHeatmapDataset(train_img_dir, train_t7_dir, transform=get_transforms())
 
-train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=16)
+# Validation split
+val_ratio = 0.2
+train_size = int((1 - val_ratio) * len(full_dataset))
+val_size = len(full_dataset) - train_size
+#train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+generator = torch.Generator().manual_seed(42)
+train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size], generator=generator)
 
-model = HeatmapCNN().to(device)
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=0)
+val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=0)
+
+# Model
+model = LandmarkCNN().to(device)
+
+# Loss Function and Optimizer
 criterion = nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-best_val_loss = float("inf")
-for epoch in range(30):
+# TensorBoard logger
+writer = SummaryWriter(log_dir="runs/landmark_experiment")
+
+# Training Loop
+best_val_loss = float('inf')
+num_epochs = 30
+
+for epoch in range(num_epochs):
     model.train()
-    train_loss = 0.0
-    loop = tqdm(train_loader, desc=f"Epoch {epoch+1}")
-    for batch_idx, (images, heatmaps) in enumerate(loop):
-        images, heatmaps = images.to(device), heatmaps.to(device)
-        outputs = model(images)
-        loss = criterion(outputs, heatmaps)
+    running_loss = 0.0
+
+    for images, heatmaps in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
+        images = images.to(device)
+        heatmaps = heatmaps.to(device)
 
         optimizer.zero_grad()
+
+        # Forward pass (multi-stage)
+        heatmap1, heatmap2 = model(images)
+
+        # Compute losses from both stages
+        loss1 = criterion(heatmap1, heatmaps)
+        loss2 = criterion(heatmap2, heatmaps)
+        loss = loss1 + loss2
+
+        # Backward pass + update weights
         loss.backward()
         optimizer.step()
 
-        train_loss += loss.item()
-        loop.set_postfix(loss=loss.item())
+        running_loss += loss.item()
 
-        # 🔍 Debug: visualize 1 sample from first batch of first epoch
-        if epoch == 0 and batch_idx == 0:
-            import matplotlib.pyplot as plt
-            plt.imshow(heatmaps[0][0].cpu(), cmap='hot')  # Landmark 0 of first sample
-            plt.title("Heatmap for landmark 0")
-            plt.axis("off")
-            plt.show()
-
-
-
-    avg_train = train_loss / len(train_loader)
+    train_loss = running_loss / len(train_loader)
 
     # Validation
     model.eval()
     val_loss = 0.0
     with torch.no_grad():
         for images, heatmaps in val_loader:
-            images, heatmaps = images.to(device), heatmaps.to(device)
-            outputs = model(images)
-            loss = criterion(outputs, heatmaps)
+            images = images.to(device)
+            heatmaps = heatmaps.to(device)
+
+            heatmap1, heatmap2 = model(images)
+            loss1 = criterion(heatmap1, heatmaps)
+            loss2 = criterion(heatmap2, heatmaps)
+            loss = loss1 + loss2
+
             val_loss += loss.item()
-    avg_val = val_loss / len(val_loader)
 
-    print(f"Epoch {epoch+1}: Train Loss={avg_train:.4f} | Val Loss={avg_val:.4f}")
-    if avg_val < best_val_loss:
-        best_val_loss = avg_val
-        torch.save(model.state_dict(), "best_heatmap_model.pth")
-        print("Saved Best Model")
+    val_loss /= len(val_loader)
 
-    
+    # Logging
+    print(f"Epoch {epoch+1}: Train Loss={train_loss:.4f} | Val Loss={val_loss:.4f}")
+    writer.add_scalars("Loss", {"Train": train_loss, "Validation": val_loss}, epoch + 1)
+
+    # Save best model
+    if val_loss < best_val_loss:
+        best_val_loss = val_loss
+        torch.save(model.state_dict(), save_path)
+        print("✅ Saved Best Model")
+
+writer.close()
 
 # using validation set
 '''import os

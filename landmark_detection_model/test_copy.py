@@ -60,19 +60,19 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-from landmark_cnn_copy import LandmarkCNN
+from landmark_cnn_copy import HeatmapCNN
 from data_preprocessing_copy import get_transforms
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model
-model = LandmarkCNN()
+model = HeatmapCNN()
 model.load_state_dict(torch.load("best_model.pth", map_location=device))
 model.to(device)
 model.eval()
 
 # Load test image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg4.jpg"
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg2.jpg"
 original_img = cv2.imread(image_path)
 
 if original_img is None:
@@ -95,15 +95,15 @@ input_tensor = transform(pil_img).unsqueeze(0).to(device)
 with torch.no_grad():
     output = model(input_tensor).cpu().numpy().reshape(-1, 2)
 
-# # Denormalize landmarks using display size (256x256)
-# output[:, 0] *= 256
-# output[:, 1] *= 256
+# Denormalize landmarks using display size (256x256)
+output[:, 0] *= 256
+output[:, 1] *= 256
 
-original_width = original_img.shape[1]
-original_height = original_img.shape[0]
+# original_width = original_img.shape[1]
+# original_height = original_img.shape[0]
 
-output[:, 0] *= original_width
-output[:, 1] *= original_height
+# output[:, 0] *= original_width
+# output[:, 1] *= original_height
 
 
 # Draw landmarks on resized image

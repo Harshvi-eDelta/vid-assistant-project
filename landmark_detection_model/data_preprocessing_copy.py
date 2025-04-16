@@ -68,19 +68,24 @@ def get_transforms():
         transforms.Normalize(mean=[0.5]*3, std=[0.5]*3),
     ])
 
-def generate_heatmap(landmark, heatmap_size=64, image_size=256, sigma=2.5):
+def generate_heatmap(landmark, heatmap_size=64, image_size=256, sigma=1.5):
     num_landmarks = landmark.shape[0]
     heatmaps = np.zeros((num_landmarks, heatmap_size, heatmap_size), dtype=np.float32)
 
     for i in range(num_landmarks):
         x = int(landmark[i, 0] / image_size * heatmap_size)
         y = int(landmark[i, 1] / image_size * heatmap_size)
+
         if x < 0 or y < 0 or x >= heatmap_size or y >= heatmap_size:
             continue
-        heatmap = np.zeros((heatmap_size, heatmap_size), dtype=np.float32)
-        heatmap[y, x] = 1
-        heatmap = cv2.GaussianBlur(heatmap, (0, 0), sigma)
-        heatmap = heatmap / heatmap.max()
+
+        # Create meshgrid
+        xx, yy = np.meshgrid(np.arange(heatmap_size), np.arange(heatmap_size))
+        heatmap = np.exp(-((xx - x) ** 2 + (yy - y) ** 2) / (2 * sigma ** 2))
+        heatmap = heatmap.astype(np.float32)
+
+        # Normalize to [0,1]
+        heatmap = heatmap / np.max(heatmap)
         heatmaps[i] = heatmap
 
     return heatmaps
@@ -119,6 +124,10 @@ class LandmarkHeatmapDataset(Dataset):
 
         if self.transform:
             image = self.transform(image)
+
+        if idx == 0:
+            print("Landmark sample values (raw):", landmark.shape)
+            print("First 5 landmarks:", landmark[:5])
 
         # Generate heatmaps
         heatmaps = generate_heatmap(landmark)

@@ -27,24 +27,49 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class HeatmapCNN(nn.Module):
+class LandmarkCNN(nn.Module):
     def __init__(self, num_landmarks=68):
-        super(HeatmapCNN, self).__init__()
-        self.encoder = nn.Sequential(
-            nn.Conv2d(3, 64, 3, padding=1), nn.ReLU(),
-            nn.Conv2d(64, 128, 3, padding=1), nn.ReLU(),
-            nn.MaxPool2d(2),  # 128x128
-            nn.Conv2d(128, 256, 3, padding=1), nn.ReLU(),
-            nn.MaxPool2d(2),  # 64x64
+        super(LandmarkCNN, self).__init__()
+
+        # Shared feature extractor (Backbone)
+        self.backbone = nn.Sequential(
+            nn.Conv2d(3, 32, 3, padding=1),   # Input channels: 3 (RGB), Output: 32
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2),                  # Downsample to 128x128
+
+            nn.Conv2d(32, 64, 3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2),                  # Downsample to 64x64
+
+            nn.Conv2d(64, 128, 3, padding=1),
+            nn.ReLU(inplace=True),
         )
-        self.decoder = nn.Sequential(
-            nn.Conv2d(256, num_landmarks, 1)
+
+        # Stage 1 Head – First prediction of heatmaps
+        self.stage1_head = nn.Sequential(
+            nn.Conv2d(128, 64, 3, padding=1),  # Refine features
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, num_landmarks, 1)    # Final output shape: (B, 68, 64, 64)
+        )
+
+        # Stage 2 Head – Second refinement stage
+        self.stage2_refine = nn.Sequential(
+            nn.Conv2d(128 + num_landmarks, 64, 3, padding=1),  # Concatenate features + heatmap1
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, num_landmarks, 1)                     # Output shape: (B, 68, 64, 64)
         )
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.decoder(x)
-        return x  # shape: (B, 68, 64, 64)
+        features = self.backbone(x)            # Shared CNN features → shape: [B, 128, 64, 64]
+
+        heatmap1 = self.stage1_head(features)  # Stage 1 prediction → shape: [B, 68, 64, 64]
+
+        # Concatenate features and heatmap1 along channel dimension
+        concat = torch.cat([features, heatmap1], dim=1)  # Shape: [B, 128 + 68, 64, 64]
+
+        heatmap2 = self.stage2_refine(concat)  # Stage 2 refined heatmap → shape: [B, 68, 64, 64]
+
+        return heatmap1, heatmap2
 
 
 
