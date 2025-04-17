@@ -60,13 +60,15 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-from landmark_cnn_copy import HeatmapCNN
+from landmark_cnn_copy import LandmarkCNN
 from data_preprocessing_copy import get_transforms
+import collections
+import scipy.ndimage
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model
-model = HeatmapCNN()
+model = LandmarkCNN()
 model.load_state_dict(torch.load("best_model.pth", map_location=device))
 model.to(device)
 model.eval()
@@ -91,24 +93,64 @@ pil_img = Image.fromarray(original_img)
 transform = get_transforms()
 input_tensor = transform(pil_img).unsqueeze(0).to(device)
 
-# Predict
-with torch.no_grad():
-    output = model(input_tensor).cpu().numpy().reshape(-1, 2)
+# Decode heatmaps to (x, y) coordinates
+def heatmaps_to_landmarks_argmax(heatmaps):
+    landmarks = []
+    for i in range(heatmaps.shape[0]):
+        h = heatmaps[i]
+        y, x = np.unravel_index(np.argmax(h), h.shape)
+        landmarks.append([x, y])
+    return np.array(landmarks)
 
-# Denormalize landmarks using display size (256x256)
-output[:, 0] *= 256
-output[:, 1] *= 256
+
+with torch.no_grad():
+    output = model(input_tensor)
+    print(type(output))              # Shape: (1, 68, 64, 64)
+    
+    # If output is a tuple, unpack the actual tensor
+    if isinstance(output, tuple):
+        output = output[0]
+
+    output = output[0].squeeze(0).cpu().numpy()  # Shape: (68, 64, 64)
+
+landmarks = heatmaps_to_landmarks_argmax(output)
+
+
+# # Convert heatmaps to coordinates
+# landmarks = heatmaps_to_landmarks(output)
+# print(f"Total landmarks: {len(landmarks)}")
+
+# Convert to int for checking duplicates at pixel level
+int_landmarks = np.round(landmarks).astype(int)
+
+# Count each (x, y) pair
+counter = collections.Counter(map(tuple, int_landmarks))
+duplicates = [pt for pt, count in counter.items() if count > 1]
+
+print(f"\nDetected {len(duplicates)} overlapping landmark positions:")
+for pt in duplicates:
+    print(f" - {pt}")
+
+# Scale landmarks from heatmap size (64x64) → image size (256x256)
+landmarks *= 4  # (256 / 64)
 
 # original_width = original_img.shape[1]
 # original_height = original_img.shape[0]
 
 # output[:, 0] *= original_width
 # output[:, 1] *= original_height
+print("Landmarks shape:", landmarks.shape)
+print("First 5 landmarks:", landmarks[:5])
 
 
-# Draw landmarks on resized image
-for (x, y) in output:
+# # Draw landmarks on resized image
+for (x, y) in landmarks:
+    x = int(np.clip(x, 0, 255))
+    y = int(np.clip(y, 0, 255))
     cv2.circle(resized_img, (int(x), int(y)), 2, (0, 255, 0), -1)
+
+# for idx, (x, y) in enumerate(landmarks):
+#     print(f"Landmark {idx}: ({x}, {y})")
 
 # Show result
 plt.figure(figsize=(4, 4))
@@ -116,8 +158,3 @@ plt.imshow(resized_img)
 plt.title("Predicted Landmarks")
 plt.axis("off")
 plt.show()
-
-
-
-
-

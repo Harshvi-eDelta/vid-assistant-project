@@ -73,8 +73,9 @@ def generate_heatmap(landmark, heatmap_size=64, image_size=256, sigma=1.5):
     heatmaps = np.zeros((num_landmarks, heatmap_size, heatmap_size), dtype=np.float32)
 
     for i in range(num_landmarks):
-        x = int(landmark[i, 0] / image_size * heatmap_size)
-        y = int(landmark[i, 1] / image_size * heatmap_size)
+        x = int(landmark[i][0] / 256 * heatmap_size)
+        y = int(landmark[i][1] / 256 * heatmap_size)
+
 
         if x < 0 or y < 0 or x >= heatmap_size or y >= heatmap_size:
             continue
