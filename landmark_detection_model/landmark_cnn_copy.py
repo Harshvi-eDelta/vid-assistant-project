@@ -62,8 +62,22 @@ class LandmarkCNN(nn.Module):
             nn.Conv2d(128, num_landmarks, kernel_size=1)
         )
 
-        # Stage 3: Final refinement stage
+        # Stage 3
         self.stage3 = nn.Sequential(
+            nn.Conv2d(num_landmarks, 64, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(64, num_landmarks, kernel_size=1)
+        )
+
+        # Stage 4
+        self.stage4 = nn.Sequential(
+            nn.Conv2d(num_landmarks, 64, kernel_size=3, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(64, num_landmarks, kernel_size=1)
+        )
+
+        # Stage 5
+        self.stage5 = nn.Sequential(
             nn.Conv2d(num_landmarks, 64, kernel_size=3, padding=1),
             nn.ReLU(),
             nn.Conv2d(64, num_landmarks, kernel_size=1)
@@ -73,8 +87,10 @@ class LandmarkCNN(nn.Module):
         feat = self.features(x)
         out1 = self.stage1(feat)            # Shape: [B, 68, 64, 64]
         out2 = self.stage2(out1)            # Refines out1
-        out3 = self.stage3(out2)            # Refines out2
-        return out1, out2, out3             # Return all stages
+        out3 = self.stage3(out2)  
+        out4 = self.stage4(out3)
+        out5 = self.stage5(out4)          # Refines out2
+        return out1, out2, out3, out4, out5             # Return all stages
 
 
 

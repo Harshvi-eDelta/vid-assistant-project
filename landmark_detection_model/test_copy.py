@@ -74,7 +74,7 @@ model.to(device)
 model.eval()
 
 # Load test image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/nfimg2.jpg"
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg2.jpg"
 original_img = cv2.imread(image_path)
 
 if original_img is None:
@@ -103,9 +103,9 @@ def heatmaps_to_landmarks_argmax(heatmaps):
     return np.array(landmarks)
 
 with torch.no_grad():
-    _,_,output = model(input_tensor)
+    _,_,_,_, output = model(input_tensor)
     print(type(output))              # Shape: (1, 68, 64, 64)
-    
+
     # If output is a tuple, unpack the actual tensor
     if isinstance(output, tuple):
         output = output[0]

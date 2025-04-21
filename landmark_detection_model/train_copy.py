@@ -102,7 +102,7 @@ num_epochs = 30
 for epoch in range(num_epochs):
     model.train()
     running_loss = 0.0
-
+    
     for images, heatmaps in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
         images = images.to(device)
         heatmaps = heatmaps.to(device)
@@ -110,12 +110,14 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
 
         # Forward pass (multi-stage)
-        output1, output2, output3 = model(images)
+        output1, output2, output3, output4, output5 = model(images)
         loss1 = criterion(output1, heatmaps)
         loss2 = criterion(output2, heatmaps)
         loss3 = criterion(output3, heatmaps)
+        loss4 = criterion(output4, heatmaps)
+        loss5 = criterion(output4, heatmaps)
 
-        loss = loss1 + loss2 + loss3
+        loss = loss1 + loss2 + loss3 + loss4 + loss5
 
         # Backward pass + update weights
         loss.backward()
@@ -133,12 +135,14 @@ for epoch in range(num_epochs):
             images = images.to(device)
             heatmaps = heatmaps.to(device)
 
-            output1, output2, output3 = model(images)
+            output1, output2, output3, output4, output5 = model(images)
             loss1 = criterion(output1, heatmaps)
             loss2 = criterion(output2, heatmaps)
             loss3 = criterion(output3, heatmaps)
+            loss4 = criterion(output4, heatmaps)
+            loss5 = criterion(output4, heatmaps)
 
-            loss = loss1 + loss2 + loss3
+            loss = loss1 + loss2 + loss3 + loss4 + loss5
 
             val_loss += loss.item()
 
