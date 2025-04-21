@@ -87,7 +87,7 @@ val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=0
 
 # Model
 model = LandmarkCNN().to(device)
-
+    
 # Loss Function and Optimizer
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
@@ -110,12 +110,12 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
 
         # Forward pass (multi-stage)
-        heatmap1, heatmap2 = model(images)
+        output1, output2, output3 = model(images)
+        loss1 = criterion(output1, heatmaps)
+        loss2 = criterion(output2, heatmaps)
+        loss3 = criterion(output3, heatmaps)
 
-        # Compute losses from both stages
-        loss1 = criterion(heatmap1, heatmaps)
-        loss2 = criterion(heatmap2, heatmaps)
-        loss = loss1 + loss2
+        loss = loss1 + loss2 + loss3
 
         # Backward pass + update weights
         loss.backward()
@@ -133,10 +133,12 @@ for epoch in range(num_epochs):
             images = images.to(device)
             heatmaps = heatmaps.to(device)
 
-            heatmap1, heatmap2 = model(images)
-            loss1 = criterion(heatmap1, heatmaps)
-            loss2 = criterion(heatmap2, heatmaps)
-            loss = loss1 + loss2
+            output1, output2, output3 = model(images)
+            loss1 = criterion(output1, heatmaps)
+            loss2 = criterion(output2, heatmaps)
+            loss3 = criterion(output3, heatmaps)
+
+            loss = loss1 + loss2 + loss3
 
             val_loss += loss.item()
 
@@ -150,7 +152,7 @@ for epoch in range(num_epochs):
     if val_loss < best_val_loss:
         best_val_loss = val_loss
         torch.save(model.state_dict(), save_path)
-        print("✅ Saved Best Model")
+        print(" Saved Best Model")
 
 writer.close()
 

@@ -126,13 +126,12 @@ class LandmarkHeatmapDataset(Dataset):
         if self.transform:
             image = self.transform(image)
 
-        if idx == 0:
-            print("Landmark sample values (raw):", landmark.shape)
-            print("First 5 landmarks:", landmark[:5])
-
         # Generate heatmaps
         heatmaps = generate_heatmap(landmark)
 
         return image, torch.tensor(heatmaps, dtype=torch.float32)
+        if idx == 0:
+            print("Landmark sample values (raw):", landmark.shape)
+            print("First 5 landmarks:", landmark[:5])
 
 
