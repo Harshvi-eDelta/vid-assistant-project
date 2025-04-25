@@ -74,7 +74,7 @@ model.to(device)
 model.eval()
 
 # Load test image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg2.jpg"
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/4.jpg"
 original_img = cv2.imread(image_path)
 
 if original_img is None:
@@ -113,6 +113,37 @@ with torch.no_grad():
     output = output.squeeze(0).cpu().numpy()  # Shape: (68, 64, 64)
 
 landmarks = heatmaps_to_landmarks_argmax(output)
+
+# # --- SOFT-ARGMAX VERSION ---
+# def heatmaps_to_landmarks_softargmax(heatmaps):
+#     landmarks = []
+#     for h in heatmaps:
+#         h = h.astype(np.float32)
+
+#         # Normalize heatmap
+#         h -= np.min(h)
+#         h /= np.max(h) + 1e-8
+
+#         # Softmax-like exponential for sharpness
+#         h = np.exp(h)
+#         h /= np.sum(h)
+
+#         grid_y, grid_x = np.mgrid[0:h.shape[0], 0:h.shape[1]]
+#         x = np.sum(grid_x * h)
+#         y = np.sum(grid_y * h)
+#         landmarks.append([x, y])
+#     return np.array(landmarks)
+
+# # Model inference
+# with torch.no_grad():
+#     _, _, _, _, output = model(input_tensor)
+
+#     if isinstance(output, tuple):
+#         output = output[0]
+
+#     output = output.squeeze(0).cpu().numpy()  # Shape: (68, 64, 64)
+
+# landmarks = heatmaps_to_landmarks_softargmax(output)
 
 # # Convert heatmaps to coordinates
 # landmarks = heatmaps_to_landmarks(output)
@@ -166,7 +197,7 @@ for i, (x, y) in enumerate(landmarks.astype(int)):
 #     print(f"Landmark {idx}: ({x}, {y})")
 
 # Show result
-plt.figure(figsize=(3, 3))
+plt.figure(figsize=(4, 4))
 plt.imshow(resized_img)
 plt.title("Predicted Landmarks")
 plt.axis("off")
