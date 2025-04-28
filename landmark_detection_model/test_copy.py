@@ -74,7 +74,7 @@ model.to(device)
 model.eval()
 
 # Load test image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/4.jpg"
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg1.jpg"
 original_img = cv2.imread(image_path)
 
 if original_img is None:

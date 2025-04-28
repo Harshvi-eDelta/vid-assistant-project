@@ -140,9 +140,10 @@ for epoch in range(num_epochs):
             loss2 = criterion(output2, heatmaps)
             loss3 = criterion(output3, heatmaps)
             loss4 = criterion(output4, heatmaps)
-            loss5 = criterion(output4, heatmaps)
+            loss5 = criterion(output5, heatmaps)
 
-            loss = loss1 + loss2 + loss3 + loss4 + loss5
+            # loss = loss1 + loss2 + loss3 + loss4 + loss5
+            loss = 0.5 * loss1 + 0.5 * loss2 + 0.3 * loss3 + 0.15 * loss4 + 0.05 * loss5
 
             val_loss += loss.item()
 
