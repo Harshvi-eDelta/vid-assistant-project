@@ -87,39 +87,32 @@ val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=0
 
 # Model
 model = LandmarkCNN().to(device)
-    
-# Loss Function and Optimizer
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, verbose=True)
 
-# TensorBoard logger
 writer = SummaryWriter(log_dir="runs/landmark_experiment")
-
-# Training Loop
 best_val_loss = float('inf')
 num_epochs = 30
 
 for epoch in range(num_epochs):
     model.train()
     running_loss = 0.0
-    
+
     for images, heatmaps in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
         images = images.to(device)
         heatmaps = heatmaps.to(device)
 
         optimizer.zero_grad()
-
-        # Forward pass (multi-stage)
         output1, output2, output3, output4, output5 = model(images)
+
         loss1 = criterion(output1, heatmaps)
         loss2 = criterion(output2, heatmaps)
         loss3 = criterion(output3, heatmaps)
         loss4 = criterion(output4, heatmaps)
-        loss5 = criterion(output4, heatmaps)
+        loss5 = criterion(output5, heatmaps)  # FIXED
 
         loss = loss1 + loss2 + loss3 + loss4 + loss5
-
-        # Backward pass + update weights
         loss.backward()
         optimizer.step()
 
@@ -142,21 +135,19 @@ for epoch in range(num_epochs):
             loss4 = criterion(output4, heatmaps)
             loss5 = criterion(output5, heatmaps)
 
-            # loss = loss1 + loss2 + loss3 + loss4 + loss5
-            loss = 0.5 * loss1 + 0.5 * loss2 + 0.3 * loss3 + 0.15 * loss4 + 0.05 * loss5
-
+            #  Adjusted weights to favor later stages
+            loss = 0.05 * loss1 + 0.1 * loss2 + 0.2 * loss3 + 0.3 * loss4 + 0.35 * loss5
             val_loss += loss.item()
 
     val_loss /= len(val_loader)
+    scheduler.step(val_loss)
 
-    # Logging
     print(f"Epoch {epoch+1}: Train Loss={train_loss:.4f} | Val Loss={val_loss:.4f}")
     writer.add_scalars("Loss", {"Train": train_loss, "Validation": val_loss}, epoch + 1)
 
-    # Save best model
     if val_loss < best_val_loss:
         best_val_loss = val_loss
         torch.save(model.state_dict(), save_path)
-        print(" Saved Best Model")
+        print("Saved Best Model")
 
 writer.close()

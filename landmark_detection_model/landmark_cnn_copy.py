@@ -27,6 +27,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import torch
+import torch.nn as nn
+
 class LandmarkCNN(nn.Module):
     def __init__(self, num_landmarks=68):
         super(LandmarkCNN, self).__init__()
@@ -48,49 +51,33 @@ class LandmarkCNN(nn.Module):
             nn.ReLU(),
         )
 
-        # Stage 1: Initial landmark heatmap
-        self.stage1 = nn.Sequential(
-            nn.Conv2d(256, 128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(128, num_landmarks, kernel_size=1)
-        )
+        # Stage 1: Takes only features
+        self.stage1 = self.make_stage(256, num_landmarks)
 
-        # Stage 2: Refine stage1 heatmap
-        self.stage2 = nn.Sequential(
-            nn.Conv2d(num_landmarks, 128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(128, num_landmarks, kernel_size=1)
-        )
+        # Stages 2-5: Take [features + previous heatmap]
+        self.stage2 = self.make_stage(256 + num_landmarks, num_landmarks)
+        self.stage3 = self.make_stage(256 + num_landmarks, num_landmarks)
+        self.stage4 = self.make_stage(256 + num_landmarks, num_landmarks)
+        self.stage5 = self.make_stage(256 + num_landmarks, num_landmarks)
 
-        # Stage 3
-        self.stage3 = nn.Sequential(
-            nn.Conv2d(num_landmarks, 64, kernel_size=3, padding=1),
+    def make_stage(self, in_channels, out_channels):
+        return nn.Sequential(
+            nn.Conv2d(in_channels, 128, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Conv2d(64, num_landmarks, kernel_size=1)
-        )
-
-        # Stage 4
-        self.stage4 = nn.Sequential(
-            nn.Conv2d(num_landmarks, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(64, num_landmarks, kernel_size=1)
-        )
-
-        # Stage 5
-        self.stage5 = nn.Sequential(
-            nn.Conv2d(num_landmarks, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(64, num_landmarks, kernel_size=1)
+            nn.Conv2d(128, out_channels, kernel_size=1)
         )
 
     def forward(self, x):
-        feat = self.features(x)
-        out1 = self.stage1(feat)            # Shape: [B, 68, 64, 64]
-        out2 = self.stage2(out1)            # Refines out1
-        out3 = self.stage3(out2)  
-        out4 = self.stage4(out3)
-        out5 = self.stage5(out4)          # Refines out2
-        return out1, out2, out3, out4, out5             # Return all stages
+        features = self.features(x)
+
+        out1 = self.stage1(features)
+        out2 = self.stage2(torch.cat([features, out1], dim=1))
+        out3 = self.stage3(torch.cat([features, out2], dim=1))
+        out4 = self.stage4(torch.cat([features, out3], dim=1))
+        out5 = self.stage5(torch.cat([features, out4], dim=1))
+
+        return out1, out2, out3, out4, out5
+
 
 
 
