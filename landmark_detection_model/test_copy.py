@@ -74,7 +74,7 @@ model.to(device)
 model.eval()
 
 # Load test image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/4.jpg"    # 18,16,20,20,23,24,71,04,026,42,60,133,520,801
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/4.jpg"    # 1,14,16,_1,13,16,18,23,24,27,28,29,04,026,046,060,088,0133,0143,0520
 original_img = cv2.imread(image_path)
 
 if original_img is None:

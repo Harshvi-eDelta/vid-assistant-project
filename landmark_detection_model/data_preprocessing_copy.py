@@ -68,7 +68,7 @@ def get_transforms():
         transforms.Normalize(mean=[0.5]*3, std=[0.5]*3),
     ])
 
-def generate_heatmap(landmark, heatmap_size=64, image_size=256, sigma=1.5):
+def generate_heatmap(landmark, heatmap_size=64, image_size=256, sigma=2.0):          # 1.5
     num_landmarks = landmark.shape[0]
     heatmaps = np.zeros((num_landmarks, heatmap_size, heatmap_size), dtype=np.float32)
 
