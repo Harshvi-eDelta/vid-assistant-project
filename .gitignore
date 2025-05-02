@@ -32,10 +32,11 @@ cleaned_point_cloud.ply
 checkpoints/
 best_model.pth
 best_model_1.pth
+best_model_2.pth
 model.txt
 best_heatmap_model.pth
 runs/
-
+abc.png
 check_landmark_label.py
 
 output_mesh.obj

@@ -74,9 +74,9 @@ model.to(device)
 model.eval()
 
 # Load test image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/4.jpg"    # 1,14,16,_1,13,16,18,23,24,27,28,29,04,026,046,060,088,0133,0143,0520
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg4.jpg"    # 1,14,16,_1,13,16,18,23,24,27,28,29,04,026,046,060,088,0133,0143,0520
 original_img = cv2.imread(image_path)
-
+                                                                                   # 1,14,16,20,3,7,16,23,24,25,0871,04,026,051,088,0133,0143,0168,0520,0801
 if original_img is None:
     raise FileNotFoundError(f"Image not found at path: {image_path}")
 
@@ -202,4 +202,5 @@ plt.figure(figsize=(4, 4))
 plt.imshow(resized_img)
 plt.title("Predicted Landmarks")
 plt.axis("off")
+plt.savefig("abc")
 plt.show()

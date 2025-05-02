@@ -70,7 +70,7 @@ print("Using device:", device)
 # Paths
 train_img_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg_copy"
 train_t7_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7"
-save_path = 'best_model_1.pth'
+save_path = 'best_model_2.pth'
 
 full_dataset = LandmarkHeatmapDataset(train_img_dir, train_t7_dir, transform=get_transforms())
 
@@ -93,7 +93,7 @@ scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', fa
 
 writer = SummaryWriter(log_dir="runs/landmark_experiment")
 best_val_loss = float('inf')
-num_epochs = 45
+num_epochs = 50     # 45
 
 for epoch in range(num_epochs):
     model.train()
