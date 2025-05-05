@@ -74,10 +74,10 @@ def generate_heatmap(landmark, heatmap_size=64, image_size=256, sigma=1.5):     
 
     for i in range(num_landmarks):
         x = int(landmark[i][0] / 256 * heatmap_size)
-        y = int(landmark[i][1] / 256 * heatmap_size)
+        y = int(landmark[i][1] / 256 * heatmap_size)        # image resolution to heatmap resolution
 
 
-        if x < 0 or y < 0 or x >= heatmap_size or y >= heatmap_size:
+        if x < 0 or y < 0 or x >= heatmap_size or y >= heatmap_size:    # skips if landmarks are out of bound
             continue
 
         # Create meshgrid

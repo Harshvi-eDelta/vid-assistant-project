@@ -69,17 +69,17 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model
 model = LandmarkCNN()
-model.load_state_dict(torch.load("best_model_1.pth", map_location=device))
+model.load_state_dict(torch.load("best_model_3.pth", map_location=device))
 model.to(device)
 model.eval()
 
 # Load test image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg4.jpg"    # 1,14,16,_1,13,16,18,23,24,27,28,29,04,026,046,060,088,0133,0143,0520
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/4.jpg"    # 1,14,16,_1,13,16,18,23,24,27,28,29,04,026,046,060,088,0133,0143,0520
 original_img = cv2.imread(image_path)
                                                                                    # 1,14,16,20,3,7,16,23,24,25,0871,04,026,051,088,0133,0143,0168,0520,0801
 if original_img is None:
-    raise FileNotFoundError(f"Image not found at path: {image_path}")
-
+    raise FileNotFoundError(f"Image not found at path: {image_path}")              # 1,4,14,16,20,1,3,4,5,7,11,13,15,16,17,18,20,24,25,27,28,29,026,041,042,046,050,133,168
+                                                                                    # 520,801
 # Convert to RGB
 original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
 
@@ -115,41 +115,6 @@ with torch.no_grad():
 
 landmarks = heatmaps_to_landmarks_argmax(output)
 
-# # --- SOFT-ARGMAX VERSION ---
-# def heatmaps_to_landmarks_softargmax(heatmaps):
-#     landmarks = []
-#     for h in heatmaps:
-#         h = h.astype(np.float32)
-
-#         # Normalize heatmap
-#         h -= np.min(h)
-#         h /= np.max(h) + 1e-8
-
-#         # Softmax-like exponential for sharpness
-#         h = np.exp(h)
-#         h /= np.sum(h)
-
-#         grid_y, grid_x = np.mgrid[0:h.shape[0], 0:h.shape[1]]
-#         x = np.sum(grid_x * h)
-#         y = np.sum(grid_y * h)
-#         landmarks.append([x, y])
-#     return np.array(landmarks)
-
-# # Model inference
-# with torch.no_grad():
-#     _, _, _, _, output = model(input_tensor)
-
-#     if isinstance(output, tuple):
-#         output = output[0]
-
-#     output = output.squeeze(0).cpu().numpy()  # Shape: (68, 64, 64)
-
-# landmarks = heatmaps_to_landmarks_softargmax(output)
-
-# # Convert heatmaps to coordinates
-# landmarks = heatmaps_to_landmarks(output)
-# print(f"Total landmarks: {len(landmarks)}")
-
 # Convert to int for checking duplicates at pixel level
 int_landmarks = np.round(landmarks).astype(int)
 
@@ -164,20 +129,8 @@ for pt in duplicates:
 # Scale landmarks from heatmap size (64x64) → image size (256x256)
 landmarks *= 4  # (256 / 64)
 
-# original_width = original_img.shape[1]
-# original_height = original_img.shape[0]
-
-# output[:, 0] *= original_width
-# output[:, 1] *= original_height
 print("Landmarks shape:", landmarks.shape)
 print("First 5 landmarks:", landmarks[:5])
-
-
-# # # Draw landmarks on resized image
-# for (x, y) in landmarks:
-#     x = int(np.clip(x, 0, 255))
-#     y = int(np.clip(y, 0, 255))
-#     cv2.circle(resized_img, (int(x), int(y)), 2, (0, 255, 0), -1)
 
 print("Landmarks shape:", landmarks.shape)
 for i, (x, y) in enumerate(landmarks):
@@ -192,10 +145,6 @@ for i, (x, y) in enumerate(landmarks.astype(int)):
         #cv2.putText(resized_img, str(i), (x + 2, y - 2), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (255, 0, 0), 1)
     else:
         print(f"Skipped landmark {i}: ({x}, {y}) out of bounds")
-
-
-# for idx, (x, y) in enumerate(landmarks):
-#     print(f"Landmark {idx}: ({x}, {y})")
 
 # Show result
 plt.figure(figsize=(4, 4))

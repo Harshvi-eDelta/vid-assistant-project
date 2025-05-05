@@ -70,7 +70,7 @@ print("Using device:", device)
 # Paths
 train_img_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg_copy"
 train_t7_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7"
-save_path = 'best_model_2.pth'
+save_path = 'best_model_3.pth'
 
 full_dataset = LandmarkHeatmapDataset(train_img_dir, train_t7_dir, transform=get_transforms())
 
@@ -137,7 +137,8 @@ for epoch in range(num_epochs):
             loss5 = criterion(output5, heatmaps)
 
             #  Adjusted weights to favor later stages
-            loss = 0.05 * loss1 + 0.1 * loss2 + 0.2 * loss3 + 0.3 * loss4 + 0.35 * loss5
+            # loss = 0.05 * loss1 + 0.1 * loss2 + 0.2 * loss3 + 0.3 * loss4 + 0.35 * loss5
+            loss = 0.5 * loss1 + 0.5 * loss2 + 0.3 * loss3 + 0.15 * loss4 + 0.05 * loss5
             val_loss += loss.item()
 
     val_loss /= len(val_loader)
