@@ -96,15 +96,15 @@ best_val_loss = float('inf')
 num_epochs = 50     # 45
 
 for epoch in range(num_epochs):
-    model.train()
+    model.train()       # sets model in the training mode
     running_loss = 0.0
 
     for images, heatmaps in tqdm(train_loader, desc=f"Epoch {epoch+1}"):
         images = images.to(device)
         heatmaps = heatmaps.to(device)
 
-        optimizer.zero_grad()
-        output1, output2, output3, output4, output5 = model(images)
+        ptimizer.zero_grad()        # clears all the gradients before passing to the forward 
+        output1, output2, output3, output4, output5 = model(images)     # forward pass 
 
         loss1 = criterion(output1, heatmaps)
         loss2 = criterion(output2, heatmaps)
