@@ -55,7 +55,7 @@ plt.axis("off")
 plt.show()'''
 
 # trying new 
-import torch
+'''import torch
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -74,7 +74,7 @@ model.to(device)
 model.eval()
 
 # Load test image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg2.jpg"    # 1,14,16,_1,13,16,18,23,24,27,28,29,04,026,046,060,088,0133,0143,0520
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg15.jpg"    # 1,14,16,_1,13,16,18,23,24,27,28,29,04,026,046,060,088,0133,0143,0520
 original_img = cv2.imread(image_path)
                                                                                    # 1,14,16,20,3,7,16,23,24,25,0871,04,026,051,088,0133,0143,0168,0520,0801
 if original_img is None:
@@ -84,7 +84,7 @@ if original_img is None:
 original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
 
 # Resize for display (not for inference)
-resized_img = cv2.resize(original_img, (256, 256))
+resized_img = cv2.resize(original_img, (256, 256))          # 1,16,20,1,3,4,5,13
 print(resized_img.shape)
 
 # Convert to PIL for transform
@@ -152,4 +152,72 @@ plt.imshow(resized_img)
 plt.title("Predicted Landmarks")
 plt.axis("off")
 plt.savefig("abc")
+plt.show()'''
+
+import torch
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from PIL import Image
+from landmark_cnn_copy import LandmarkCNN
+from data_preprocessing_copy import get_transforms
+import scipy.ndimage
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Load model
+model = LandmarkCNN()
+model.load_state_dict(torch.load("best_model_3.pth", map_location=device))
+model.to(device)
+model.eval()
+
+# Load test image
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg23.jpg"
+original_img = cv2.imread(image_path)
+if original_img is None:
+    raise FileNotFoundError(f"Image not found: {image_path}")
+original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
+
+# Convert to PIL and apply transform
+pil_img = Image.fromarray(original_img)
+transform = get_transforms()
+input_tensor = transform(pil_img).unsqueeze(0).to(device)
+
+# Decode with Gaussian-smoothed argmax
+def heatmaps_to_landmarks_argmax(heatmaps):
+    landmarks = []
+    for i in range(heatmaps.shape[0]):
+        smoothed = scipy.ndimage.gaussian_filter(heatmaps[i], sigma=1)
+        y, x = np.unravel_index(np.argmax(smoothed), smoothed.shape)
+        landmarks.append([x, y])
+    return np.array(landmarks)
+
+# Run inference
+with torch.no_grad():
+    _, _, _, _, output = model(input_tensor)
+    if isinstance(output, tuple):
+        output = output[0]
+    output = output.squeeze(0).cpu().numpy()  # (68, 64, 64)
+
+landmarks = heatmaps_to_landmarks_argmax(output)
+landmarks *= 4  # Scale from 64x64 → 256x256
+
+# Resize original image for visualization
+resized_img = cv2.resize(original_img, (256, 256))
+
+# Draw landmarks
+for i, (x, y) in enumerate(landmarks.astype(int)):
+    if 0 <= x < 256 and 0 <= y < 256:
+        cv2.circle(resized_img, (x, y), 2, (0, 255, 0), -1)
+    else:
+        print(f"Skipped out-of-bounds landmark {i}: ({x}, {y})")
+
+# Display
+plt.figure(figsize=(4, 4))
+plt.imshow(resized_img)
+plt.title("Predicted Landmarks")
+plt.axis("off")
+plt.savefig("abc.png")
 plt.show()
+
+

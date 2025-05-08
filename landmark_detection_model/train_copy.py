@@ -103,7 +103,7 @@ for epoch in range(num_epochs):
         images = images.to(device)
         heatmaps = heatmaps.to(device)
 
-        ptimizer.zero_grad()        # clears all the gradients before passing to the forward 
+        optimizer.zero_grad()        # clears all the gradients before passing to the forward 
         output1, output2, output3, output4, output5 = model(images)     # forward pass 
 
         loss1 = criterion(output1, heatmaps)
@@ -113,7 +113,7 @@ for epoch in range(num_epochs):
         loss5 = criterion(output5, heatmaps)  # FIXED
 
         # loss = loss1 + loss2 + loss3 + loss4 + loss5
-        loss = 0.5 * loss1 + 0.5 * loss2 + 0.3 * loss3 + 0.15 * loss4 + 0.05 * loss5
+        loss = 0.05 * loss1 + 0.1 * loss2 + 0.2 * loss3 + 0.3 * loss4 + 0.35 * loss5
         loss.backward()
         optimizer.step()
 
@@ -138,7 +138,7 @@ for epoch in range(num_epochs):
 
             #  Adjusted weights to favor later stages
             # loss = 0.05 * loss1 + 0.1 * loss2 + 0.2 * loss3 + 0.3 * loss4 + 0.35 * loss5
-            loss = 0.5 * loss1 + 0.5 * loss2 + 0.3 * loss3 + 0.15 * loss4 + 0.05 * loss5
+            loss = 0.05 * loss1 + 0.1 * loss2 + 0.2 * loss3 + 0.3 * loss4 + 0.35 * loss5
             val_loss += loss.item()
 
     val_loss /= len(val_loader)
