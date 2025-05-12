@@ -167,12 +167,12 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load model
 model = LandmarkCNN()
-model.load_state_dict(torch.load("best_model_3.pth", map_location=device))
+model.load_state_dict(torch.load("best_model_4.pth", map_location=device))
 model.to(device)
 model.eval()
 
 # Load test image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg1.jpg"
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/4.jpg"     # 1,14,16,20,_1,3,13,24,27,29,30,026,042,046,0133,0520,0801
 original_img = cv2.imread(image_path)
 if original_img is None:
     raise FileNotFoundError(f"Image not found: {image_path}")
@@ -201,6 +201,7 @@ with torch.no_grad():
 
 landmarks = heatmaps_to_landmarks_argmax(output)
 landmarks *= 4  # Scale from 64x64 → 256x256
+print(landmarks)
 
 # Resize original image for visualization
 resized_img = cv2.resize(original_img, (256, 256))

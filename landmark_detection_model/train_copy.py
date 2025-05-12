@@ -70,7 +70,7 @@ print("Using device:", device)
 # Paths
 train_img_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/original_jpg_copy"
 train_t7_dir = "/Users/edelta076/Desktop/Project_VID_Assistant/new_dataset/t7"
-save_path = 'best_model_3.pth'
+save_path = 'best_model_4.pth'
 
 full_dataset = LandmarkHeatmapDataset(train_img_dir, train_t7_dir, transform=get_transforms())
 

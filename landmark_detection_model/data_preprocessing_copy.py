@@ -63,12 +63,12 @@ import cv2
 def get_transforms():
     return transforms.Compose([
         transforms.Resize((256, 256)),
-        transforms.RandomHorizontalFlip(),
+        #transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.5]*3, std=[0.5]*3),
     ])
 
-def generate_heatmap(landmark, heatmap_size=64, image_size=256, sigma=1.5):          # 1.5,2.0
+def generate_heatmap(landmark, heatmap_size=128 , image_size=256, sigma=2.0):          # 1.5,2.0     # heatmap size = 64
     num_landmarks = landmark.shape[0]
     heatmaps = np.zeros((num_landmarks, heatmap_size, heatmap_size), dtype=np.float32)
 
