@@ -127,7 +127,8 @@ class LandmarkHeatmapDataset(Dataset):
             image = self.transform(image)
 
         # Generate heatmaps
-        heatmaps = generate_heatmap(landmark)
+        # heatmaps = generate_heatmap(landmark)
+        heatmaps = generate_heatmap(landmark, heatmap_size=128)
 
         return image, torch.tensor(heatmaps, dtype=torch.float32)
         if idx == 0:
