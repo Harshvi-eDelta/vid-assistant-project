@@ -172,7 +172,7 @@ model.to(device)
 model.eval()
 
 # Load test image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg3.jpg"     # 1,14,16,20,_1,3,13,24,27,29,30,026,042,046,0133,0520,0801
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/4.jpg"     # 1,14,16,20,_1,3,13,24,27,29,30,026,042,046,0133,0520,0801
 original_img = cv2.imread(image_path)
 if original_img is None:
     raise FileNotFoundError(f"Image not found: {image_path}")
@@ -200,7 +200,7 @@ with torch.no_grad():
     output = output.squeeze(0).cpu().numpy()  # (68, 64, 64)
 
 landmarks = heatmaps_to_landmarks_argmax(output)
-landmarks *= 4  # Scale from 64x64 → 256x256
+landmarks *= 2  # Scale from 64x64 → 256x256        # *= 4 causing and error !
 print(landmarks)
 
 # Resize original image for visualization
