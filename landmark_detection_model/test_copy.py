@@ -172,7 +172,7 @@ model.to(device)
 model.eval()
 
 # Load test image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/4.jpg"     # 1,14,16,20,_1,3,13,24,27,29,30,026,042,046,0133,0520,0801
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg2.jpg"     # 1,14,16,20,_1,3,13,24,27,29,30,026,042,046,0133,0520,0801
 original_img = cv2.imread(image_path)
 if original_img is None:
     raise FileNotFoundError(f"Image not found: {image_path}")
