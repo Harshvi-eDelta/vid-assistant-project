@@ -172,10 +172,10 @@ model.to(device)
 model.eval()
 
 # Load test image
-image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/fimg1.jpg"     # 1,14,16,20,_1,3,13,24,27,29,30,026,042,046,0133,0520,0801
+image_path = "/Users/edelta076/Desktop/Project_VID_Assistant/face_images/image00801.jpg"     # 1,14,16,20,_1,3,13,24,27,29,30,026,042,046,0133,0520,0801
 original_img = cv2.imread(image_path)
 if original_img is None:
-    raise FileNotFoundError(f"Image not found: {image_path}")
+    raise FileNotFoundError(f"Image not found: {image_path}")       # 1,4,16,20,_1,5,6
 original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
 
 # Convert to PIL and apply transform
